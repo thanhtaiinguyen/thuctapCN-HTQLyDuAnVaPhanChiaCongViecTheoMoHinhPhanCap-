@@ -1,0 +1,67 @@
+@model thuctapCN.Models.EditUserViewModel
+@{
+    ViewData["Title"] = "Chỉnh sửa người dùng";
+}
+
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0">Chỉnh sửa người dùng</h4>
+                </div>
+                <div class="card-body">
+                    <form asp-action="EditUser" method="post">
+                        <input asp-for="Id" type="hidden" />
+                        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                        <div class="mb-3">
+                            <label asp-for="Email" class="form-label"></label>
+                            <input asp-for="Email" class="form-control" />
+                            <span asp-validation-for="Email" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="UserName" class="form-label"></label>
+                            <input asp-for="UserName" class="form-control" readonly />
+                            <small class="form-text text-muted">Tên người dùng không thể thay đổi.</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="EmployeeCode" class="form-label"></label>
+                            <input asp-for="EmployeeCode" class="form-control" readonly />
+                            <small class="form-text text-muted">Mã nhân viên không thể thay đổi.</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Phân quyền</label>
+                            <div class="border rounded p-3">
+                                @foreach (var role in Model.AllRoles)
+                                {
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="SelectedRoles" value="@role.Name" id="role_@role.Id" 
+                                               @(Model.SelectedRoles.Contains(role.Name) ? "checked" : "") />
+                                        <label class="form-check-label" for="role_@role.Id">
+                                            @role.Name
+                                        </label>
+                                    </div>
+                                }
+                            </div>
+                            <small class="form-text text-muted">Chọn ít nhất một role cho user.</small>
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <a asp-action="Users" class="btn btn-secondary">Hủy</a>
+                            <button type="submit" class="btn btn-primary">Lưu thay đổi</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}
+

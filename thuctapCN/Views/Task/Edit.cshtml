@@ -1,0 +1,108 @@
+@model thuctapCN.Models.EditTaskViewModel
+
+@{
+    ViewData["Title"] = "Sửa công việc";
+}
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="bi bi-pencil"></i> Sửa công việc
+                    </h4>
+                    <small>Dự án: @Model.ProjectCode - @Model.ProjectName</small>
+                </div>
+                <div class="card-body">
+                    <form asp-action="Edit" method="post">
+                        <input type="hidden" asp-for="Id" />
+                        <input type="hidden" asp-for="ProjectId" />
+                        
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+
+                        <div class="mb-3">
+                            <label asp-for="TaskName" class="form-label"></label>
+                            <input asp-for="TaskName" class="form-control" />
+                            <span asp-validation-for="TaskName" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Description" class="form-label"></label>
+                            <textarea asp-for="Description" class="form-control" rows="4"></textarea>
+                            <span asp-validation-for="Description" class="text-danger"></span>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="Deadline" class="form-label"></label>
+                                <input asp-for="Deadline" type="date" class="form-control" 
+                                       min="@Model.ProjectStartDate.ToString("yyyy-MM-dd")" 
+                                       max="@Model.ProjectEndDate.ToString("yyyy-MM-dd")" />
+                                <span asp-validation-for="Deadline" class="text-danger"></span>
+                                <small class="form-text text-muted">
+                                    Phạm vi dự án: @Model.ProjectStartDate.ToString("dd/MM/yyyy") - @Model.ProjectEndDate.ToString("dd/MM/yyyy")
+                                </small>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="Priority" class="form-label"></label>
+                                <select asp-for="Priority" class="form-select">
+                                    <option value="Cao">🔴 Cao</option>
+                                    <option value="Trung bình">🟡 Trung bình</option>
+                                    <option value="Thấp">🟢 Thấp</option>
+                                </select>
+                                <span asp-validation-for="Priority" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="AssignedToUserId" class="form-label"></label>
+                            <select asp-for="AssignedToUserId" class="form-select">
+                                @foreach (var member in Model.AvailableMembers)
+                                {
+                                    <option value="@member.Id">
+                                        @member.FullName (@member.EmployeeCode) - @member.Email
+                                    </option>
+                                }
+                            </select>
+                            <span asp-validation-for="AssignedToUserId" class="text-danger"></span>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="Status" class="form-label"></label>
+                                <select asp-for="Status" class="form-select">
+                                    <option value="Chưa bắt đầu">Chưa bắt đầu</option>
+                                    <option value="Đang thực hiện">Đang thực hiện</option>
+                                    <option value="Hoàn thành">Hoàn thành</option>
+                                    <option value="Tạm dừng">Tạm dừng</option>
+                                </select>
+                                <span asp-validation-for="Status" class="text-danger"></span>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="Progress" class="form-label"></label>
+                                <input asp-for="Progress" type="number" min="0" max="100" class="form-control" />
+                                <span asp-validation-for="Progress" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-between mt-4">
+                            <a asp-action="Index" asp-route-projectId="@Model.ProjectId" class="btn btn-secondary">
+                                <i class="bi bi-arrow-left"></i> Hủy
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check-circle"></i> Lưu thay đổi
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

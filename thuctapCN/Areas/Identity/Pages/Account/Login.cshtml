@@ -1,80 +1,75 @@
 ﻿@page
 @model LoginModel
-
 @{
-    ViewData["Title"] = "Log in";
+    ViewData["Title"] = "Đăng nhập";
+    Layout = "/Areas/Identity/Pages/_AuthLayout.cshtml";
 }
 
-<h1>@ViewData["Title"]</h1>
-<div class="row">
-    <div class="col-md-4">
-        <section>
-            <form id="account" method="post">
-                <h2>Use a local account to log in.</h2>
-                <hr />
-                <div asp-validation-summary="ModelOnly" class="text-danger" role="alert"></div>
-                <div class="form-floating mb-3">
-                    <input asp-for="Input.Email" class="form-control" autocomplete="username" aria-required="true" placeholder="name@example.com" />
-                    <label asp-for="Input.Email" class="form-label">Email</label>
-                    <span asp-validation-for="Input.Email" class="text-danger"></span>
-                </div>
-                <div class="form-floating mb-3">
-                    <input asp-for="Input.Password" class="form-control" autocomplete="current-password" aria-required="true" placeholder="password" />
-                    <label asp-for="Input.Password" class="form-label">Password</label>
-                    <span asp-validation-for="Input.Password" class="text-danger"></span>
-                </div>
-                <div class="checkbox mb-3">
-                    <label asp-for="Input.RememberMe" class="form-label">
-                        <input class="form-check-input" asp-for="Input.RememberMe" />
-                        @Html.DisplayNameFor(m => m.Input.RememberMe)
-                    </label>
-                </div>
-                <div>
-                    <button id="login-submit" type="submit" class="w-100 btn btn-lg btn-primary">Log in</button>
-                </div>
-                <div>
-                    <p>
-                        <a id="forgot-password" asp-page="./ForgotPassword">Forgot your password?</a>
-                    </p>
-                    <p>
-                        <a id="resend-confirmation" asp-page="./ResendEmailConfirmation">Resend email confirmation</a>
-                    </p>
-                </div>
-            </form>
-        </section>
-    </div>
-    <div class="col-md-6 col-md-offset-2">
-        <section>
-            <h3>Use another service to log in.</h3>
-            <hr />
-            @{
-                if ((Model.ExternalLogins?.Count ?? 0) == 0)
-                {
-                    <div>
-                        <p>
-                            There are no external authentication services configured. See this <a href="https://go.microsoft.com/fwlink/?LinkID=532715">article
-                            about setting up this ASP.NET application to support logging in via external services</a>.
-                        </p>
-                    </div>
-                }
-                else
-                {
-                    <form id="external-account" asp-page="./ExternalLogin" asp-route-returnUrl="@Model.ReturnUrl" method="post" class="form-horizontal">
-                        <div>
-                            <p>
-                                @foreach (var provider in Model.ExternalLogins!)
-                                {
-                                    <button type="submit" class="btn btn-primary" name="provider" value="@provider.Name" title="Log in using your @provider.DisplayName account">@provider.DisplayName</button>
-                                }
-                            </p>
-                        </div>
-                    </form>
-                }
-            }
-        </section>
-    </div>
+<div class="auth-header">
+    <h2>Đăng nhập</h2>
+    <p>Vui lòng đăng nhập để tiếp tục</p>
 </div>
+
+<form id="account" method="post" novalidate>
+    <div asp-validation-summary="ModelOnly" class="validation-summary text-danger"></div>
+
+    <div class="form-floating">
+        <input asp-for="Input.Email" class="form-control" autocomplete="username" placeholder="Email" />
+        <label asp-for="Input.Email">Email</label>
+        <span asp-validation-for="Input.Email" class="field-validation-error"></span>
+    </div>
+
+    <div class="form-floating password-wrapper">
+        <input asp-for="Input.Password" class="form-control" autocomplete="current-password" placeholder="Mật khẩu" id="passwordInput" />
+        <label asp-for="Input.Password">Mật khẩu</label>
+        <button type="button" class="password-toggle-btn" id="togglePassword" aria-label="Hiện/ẩn mật khẩu">
+            <svg id="eyeIcon" width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+            </svg>
+            <svg id="eyeSlashIcon" width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="display: none;">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"></path>
+            </svg>
+        </button>
+        <span asp-validation-for="Input.Password" class="field-validation-error"></span>
+    </div>
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div class="form-check">
+            <input class="form-check-input" asp-for="Input.RememberMe" id="rememberMe" />
+            <label class="form-check-label" for="rememberMe">
+                Ghi nhớ đăng nhập
+            </label>
+        </div>
+        <a asp-page="./ForgotPassword" class="forgot-password-link">Quên mật khẩu?</a>
+    </div>
+
+    <button type="submit" class="btn btn-login">Đăng nhập</button>
+</form>
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const toggleBtn = document.getElementById('togglePassword');
+            const passwordInput = document.getElementById('passwordInput');
+            const eyeIcon = document.getElementById('eyeIcon');
+            const eyeSlashIcon = document.getElementById('eyeSlashIcon');
+
+            if (toggleBtn && passwordInput) {
+                toggleBtn.addEventListener('click', function() {
+                    const isPassword = passwordInput.type === 'password';
+                    passwordInput.type = isPassword ? 'text' : 'password';
+
+                    if (isPassword) {
+                        eyeIcon.style.display = 'none';
+                        eyeSlashIcon.style.display = 'block';
+                    } else {
+                        eyeIcon.style.display = 'block';
+                        eyeSlashIcon.style.display = 'none';
+                    }
+                });
+            }
+        });
+    </script>
 }

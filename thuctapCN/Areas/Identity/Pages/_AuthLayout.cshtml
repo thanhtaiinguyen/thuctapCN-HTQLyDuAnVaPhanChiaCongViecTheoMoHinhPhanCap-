@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Thực Tập CN</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/thuctapCN.styles.css" asp-append-version="true" />
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: #f5f5f5;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .auth-container {
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .auth-card {
+            background: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            border: 1px solid #e0e0e0;
+            padding: 40px;
+        }
+
+        .auth-header {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+
+        .auth-header h2 {
+            color: #333333;
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 24px;
+        }
+
+        .auth-header p {
+            color: #666666;
+            font-size: 14px;
+            margin: 0;
+        }
+
+        .form-floating {
+            margin-bottom: 16px;
+            position: relative;
+        }
+
+        .form-floating > .form-control {
+            height: 48px;
+            padding: 12px 16px;
+            border: 1px solid #dddddd;
+            border-radius: 4px;
+            font-size: 14px;
+            color: #333333;
+            background-color: #ffffff;
+            transition: border-color 0.2s ease;
+        }
+
+        .form-floating > .form-control:focus {
+            border-color: #0078D7;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(0, 120, 215, 0.1);
+            background-color: #ffffff;
+        }
+
+        .form-floating > label {
+            padding: 0 16px;
+            font-size: 14px;
+            color: #666666;
+            font-weight: 400;
+        }
+
+        .password-wrapper {
+            position: relative;
+        }
+
+        .password-toggle-btn {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            border: none;
+            background: transparent;
+            color: #999999;
+            padding: 6px;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: color 0.2s ease;
+        }
+
+        .password-toggle-btn:hover {
+            color: #0078D7;
+        }
+
+        .form-check {
+            margin-bottom: 16px;
+        }
+
+        .form-check-input {
+            width: 18px;
+            height: 18px;
+            margin-top: 0;
+            border: 1px solid #cccccc;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+
+        .form-check-input:checked {
+            background-color: #0078D7;
+            border-color: #0078D7;
+        }
+
+        .form-check-label {
+            margin-left: 8px;
+            color: #666666;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        .forgot-password-link {
+            color: #0078D7;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .forgot-password-link:hover {
+            text-decoration: underline;
+        }
+
+        .btn-login {
+            background-color: #0078D7;
+            border: none;
+            border-radius: 4px;
+            padding: 12px;
+            font-weight: 500;
+            font-size: 15px;
+            color: #ffffff;
+            width: 100%;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+
+        .btn-login:hover {
+            background-color: #005a9e;
+            color: #ffffff;
+        }
+
+        .btn-login:active {
+            background-color: #004578;
+        }
+
+        .register-link {
+            text-align: center;
+            margin-top: 24px;
+            padding-top: 24px;
+            border-top: 1px solid #eeeeee;
+        }
+
+        .register-link p {
+            color: #666666;
+            font-size: 14px;
+            margin: 0;
+        }
+
+        .register-link a {
+            color: #0078D7;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .register-link a:hover {
+            text-decoration: underline;
+        }
+
+        .validation-summary {
+            background-color: #fff3cd;
+            border: 1px solid #ffc107;
+            border-radius: 4px;
+            padding: 12px 16px;
+            margin-bottom: 16px;
+            color: #856404;
+            font-size: 14px;
+        }
+
+        .validation-summary ul {
+            margin: 0;
+            padding-left: 20px;
+        }
+
+        .field-validation-error {
+            color: #d32f2f;
+            font-size: 13px;
+            margin-top: 4px;
+            display: block;
+        }
+
+        @@media (max-width: 576px) {
+            .auth-card {
+                padding: 32px 24px;
+            }
+
+            .auth-header h2 {
+                font-size: 22px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="auth-container">
+        <div class="auth-card">
+            @RenderBody()
+        </div>
+    </div>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

@@ -1,0 +1,73 @@
+@model thuctapCN.Models.CreateUserViewModel
+@{
+    ViewData["Title"] = "Tạo người dùng mới";
+}
+
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0">Tạo người dùng mới</h4>
+                </div>
+                <div class="card-body">
+                    <form asp-action="CreateUser" method="post">
+                        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                        <div class="mb-3">
+                            <label asp-for="Email" class="form-label"></label>
+                            <input asp-for="Email" class="form-control" />
+                            <span asp-validation-for="Email" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="EmployeeCode" class="form-label"></label>
+                            <input asp-for="EmployeeCode" class="form-control" />
+                            <span asp-validation-for="EmployeeCode" class="text-danger"></span>
+                            <small class="form-text text-muted">Mã nhân viên là duy nhất và không thể thay đổi sau khi tạo.</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Password" class="form-label"></label>
+                            <input asp-for="Password" class="form-control" />
+                            <span asp-validation-for="Password" class="text-danger"></span>
+                            <small class="form-text text-muted">Mật khẩu phải có ít nhất 6 ký tự, bao gồm chữ hoa, chữ thường và số.</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="ConfirmPassword" class="form-label"></label>
+                            <input asp-for="ConfirmPassword" class="form-control" />
+                            <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Phân quyền</label>
+                            <div class="border rounded p-3">
+                                @foreach (var role in Model.AllRoles)
+                                {
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="SelectedRoles" value="@role.Name" id="role_@role.Id" />
+                                        <label class="form-check-label" for="role_@role.Id">
+                                            @role.Name
+                                        </label>
+                                    </div>
+                                }
+                            </div>
+                            <small class="form-text text-muted">Nếu không chọn role nào, user sẽ được gán role "User" mặc định.</small>
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <a asp-action="Users" class="btn btn-secondary">Hủy</a>
+                            <button type="submit" class="btn btn-primary">Tạo người dùng</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}
+

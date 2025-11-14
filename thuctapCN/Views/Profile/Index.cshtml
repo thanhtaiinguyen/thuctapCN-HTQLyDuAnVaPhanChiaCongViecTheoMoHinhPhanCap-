@@ -1,0 +1,82 @@
+@model thuctapCN.Models.ProfileViewModel
+@{
+    ViewData["Title"] = "Thông tin cá nhân";
+}
+
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0">Thông tin cá nhân</h4>
+                    <a asp-action="Edit" class="btn btn-primary btn-sm">
+                        <i class="bi bi-pencil"></i> Chỉnh sửa
+                    </a>
+                </div>
+                <div class="card-body">
+                    @if (TempData["SuccessMessage"] != null)
+                    {
+                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                            @TempData["SuccessMessage"]
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    }
+
+                    <div class="row">
+                        <div class="col-md-4 text-center mb-4">
+                            @if (!string.IsNullOrEmpty(Model.AvatarPath))
+                            {
+                                <img src="@Model.AvatarPath" alt="Ảnh đại diện" class="img-thumbnail rounded-circle" style="width: 200px; height: 200px; object-fit: cover;" />
+                            }
+                            else
+                            {
+                                <div class="bg-secondary rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 200px; height: 200px;">
+                                    <i class="bi bi-person-fill text-white" style="font-size: 100px;"></i>
+                                </div>
+                            }
+                        </div>
+                        <div class="col-md-8">
+                            <dl class="row">
+                                <dt class="col-sm-4">Email:</dt>
+                                <dd class="col-sm-8">@Model.Email</dd>
+
+                                <dt class="col-sm-4">Họ và tên:</dt>
+                                <dd class="col-sm-8">@(Model.FullName ?? "-")</dd>
+
+                                <dt class="col-sm-4">Mã nhân viên:</dt>
+                                <dd class="col-sm-8">@(Model.EmployeeCode ?? "-")</dd>
+
+                                <dt class="col-sm-4">Số điện thoại:</dt>
+                                <dd class="col-sm-8">@(Model.PhoneNumber ?? "-")</dd>
+
+                                <dt class="col-sm-4">Địa chỉ:</dt>
+                                <dd class="col-sm-8">@(Model.Address ?? "-")</dd>
+
+                                <dt class="col-sm-4">Ngày sinh:</dt>
+                                <dd class="col-sm-8">@(Model.DateOfBirth?.ToString("dd/MM/yyyy") ?? "-")</dd>
+
+                                <dt class="col-sm-4">Giới tính:</dt>
+                                <dd class="col-sm-8">@(Model.Gender ?? "-")</dd>
+
+                                <dt class="col-sm-4">Phòng ban:</dt>
+                                <dd class="col-sm-8">@(Model.Department ?? "-")</dd>
+
+                                <dt class="col-sm-4">Chức vụ:</dt>
+                                <dd class="col-sm-8">@(Model.Position ?? "-")</dd>
+
+                                <dt class="col-sm-4">Ngày tạo:</dt>
+                                <dd class="col-sm-8">@Model.CreatedDate.ToString("dd/MM/yyyy HH:mm")</dd>
+
+                                @if (Model.UpdatedDate.HasValue)
+                                {
+                                    <dt class="col-sm-4">Ngày cập nhật:</dt>
+                                    <dd class="col-sm-8">@Model.UpdatedDate.Value.ToString("dd/MM/yyyy HH:mm")</dd>
+                                }
+                            </dl>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
