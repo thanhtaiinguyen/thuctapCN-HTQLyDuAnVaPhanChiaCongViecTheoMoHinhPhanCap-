@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using thuctapCN.Data;
 
@@ -11,9 +12,11 @@ using thuctapCN.Data;
 namespace thuctapCN.Migrations
 {
     [DbContext(typeof(thuctapCNContext))]
-    partial class thuctapCNContextModelSnapshot : ModelSnapshot
+    [Migration("20251114111142_AddApplicationUserFields")]
+    partial class AddApplicationUserFields
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -197,7 +200,6 @@ namespace thuctapCN.Migrations
                         .HasColumnType("bit");
 
                     b.Property<string>("EmployeeCode")
-                        .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
@@ -251,10 +253,6 @@ namespace thuctapCN.Migrations
                         .HasColumnType("nvarchar(256)");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("EmployeeCode")
-                        .IsUnique()
-                        .HasDatabaseName("IX_ApplicationUser_EmployeeCode");
 
                     b.HasIndex("NormalizedEmail")
                         .HasDatabaseName("EmailIndex");
