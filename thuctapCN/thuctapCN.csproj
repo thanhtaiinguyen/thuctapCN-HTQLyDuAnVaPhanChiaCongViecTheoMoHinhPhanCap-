@@ -17,4 +17,12 @@
     <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="8.0.7" />
   </ItemGroup>
 
+  <ItemGroup>
+    <EditorConfigFiles Remove="A:\ThucTapChuyenNganh\doan\thuctapCN\thuctapCN\Areas\Identity\Pages\.editorconfig" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="A:\ThucTapChuyenNganh\doan\thuctapCN\thuctapCN\Areas\Identity\Pages\.editorconfig" />
+  </ItemGroup>
+
 </Project>
