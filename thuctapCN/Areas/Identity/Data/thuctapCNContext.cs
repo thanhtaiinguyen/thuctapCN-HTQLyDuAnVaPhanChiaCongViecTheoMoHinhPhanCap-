@@ -30,6 +30,7 @@ public class thuctapCNContext : IdentityDbContext<ApplicationUser, IdentityRole,
                   .HasFilter("[EmployeeCode] IS NOT NULL");
         });
 
+
         // Cấu hình Project
         builder.Entity<Project>(entity =>
         {
@@ -88,6 +89,6 @@ public class thuctapCNContext : IdentityDbContext<ApplicationUser, IdentityRole,
 
             entity.HasIndex(t => t.Deadline)
                   .HasDatabaseName("IX_TaskAssignment_Deadline");
-        });
+        }
     }
 }
