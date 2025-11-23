@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using thuctapCN.Data;
 
@@ -11,9 +12,11 @@ using thuctapCN.Data;
 namespace thuctapCN.Migrations
 {
     [DbContext(typeof(thuctapCNContext))]
-    partial class thuctapCNContextModelSnapshot : ModelSnapshot
+    [Migration("20251123151437_AddTaskAssignmentTable")]
+    partial class AddTaskAssignmentTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -254,12 +257,8 @@ namespace thuctapCN.Migrations
 
                     b.HasIndex("EmployeeCode")
                         .IsUnique()
-<<<<<<< HEAD
                         .HasDatabaseName("IX_ApplicationUser_EmployeeCode")
                         .HasFilter("[EmployeeCode] IS NOT NULL");
-=======
-                        .HasDatabaseName("IX_ApplicationUser_EmployeeCode");
->>>>>>> 7929cc674e75331a1e771f61be947e49f8e3755f
 
                     b.HasIndex("NormalizedEmail")
                         .HasDatabaseName("EmailIndex");
@@ -272,7 +271,6 @@ namespace thuctapCN.Migrations
                     b.ToTable("AspNetUsers", (string)null);
                 });
 
-<<<<<<< HEAD
             modelBuilder.Entity("thuctapCN.Models.Project", b =>
                 {
                     b.Property<int>("Id")
@@ -425,8 +423,6 @@ namespace thuctapCN.Migrations
                     b.ToTable("TaskAssignments");
                 });
 
-=======
->>>>>>> 7929cc674e75331a1e771f61be947e49f8e3755f
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
                 {
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", null)

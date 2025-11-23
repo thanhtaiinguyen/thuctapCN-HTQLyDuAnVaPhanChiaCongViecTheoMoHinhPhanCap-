@@ -1,0 +1,223 @@
+@model IEnumerable<thuctapCN.Models.TaskListViewModel>
+
+@{
+    ViewData["Title"] = "Danh sách công việc";
+    var projectName = ViewBag.ProjectName as string;
+    var projectCode = ViewBag.ProjectCode as string;
+    var projectId = ViewBag.ProjectId;
+}
+
+<div class="container-fluid mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2><i class="bi bi-list-task"></i> Danh sách công việc</h2>
+            <p class="text-muted mb-0">Dự án: @projectCode - @projectName</p>
+        </div>
+        <div>
+            <a asp-controller="Project" asp-action="Index" class="btn btn-outline-secondary me-2">
+                <i class="bi bi-arrow-left"></i> Quay lại dự án
+            </a>
+            <a asp-action="Create" asp-route-projectId="@projectId" class="btn btn-primary">
+                <i class="bi bi-plus-circle"></i> Thêm công việc mới
+            </a>
+        </div>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle"></i> @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-triangle"></i> @TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @if (!Model.Any())
+    {
+        <div class="text-center py-5">
+            <i class="bi bi-inbox" style="font-size: 4rem; color: #ccc;"></i>
+            <p class="text-muted mt-3">Chưa có công việc nào. Hãy tạo công việc mới!</p>
+            <a asp-action="Create" asp-route-projectId="@projectId" class="btn btn-primary">
+                <i class="bi bi-plus-circle"></i> Thêm công việc đầu tiên
+            </a>
+        </div>
+    }
+    else
+    {
+        <div class="card">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Tên công việc</th>
+                                <th>Mức độ ưu tiên</th>
+                                <th>Người được giao</th>
+                                <th>Deadline</th>
+                                <th>Trạng thái</th>
+                                <th>Tiến độ</th>
+                                <th class="text-center">Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var task in Model)
+                            {
+                                <tr>
+                                    <td>
+                                        <strong>@task.TaskName</strong>
+                                        @if (task.IsOverdue)
+                                        {
+                                            <span class="badge bg-danger ms-2">Quá hạn</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        @if (task.Priority == "Cao")
+                                        {
+                                            <span class="badge bg-danger">🔴 Cao</span>
+                                        }
+                                        else if (task.Priority == "Trung bình")
+                                        {
+                                            <span class="badge bg-warning text-dark">🟡 Trung bình</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-success">🟢 Thấp</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        @task.AssignedToUserName
+                                        <br />
+                                        <small class="text-muted">@task.AssignedToEmployeeCode</small>
+                                    </td>
+                                    <td>
+                                        @task.Deadline.ToString("dd/MM/yyyy")
+                                        <br />
+                                        <small class="text-muted">
+                                            @{
+                                                var daysLeft = (task.Deadline.Date - DateTime.Now.Date).Days;
+                                                if (daysLeft < 0)
+                                                {
+                                                    <span class="text-danger">Quá @Math.Abs(daysLeft) ngày</span>
+                                                }
+                                                else if (daysLeft == 0)
+                                                {
+                                                    <span class="text-warning">Hôm nay</span>
+                                                }
+                                                else if (daysLeft <= 2)
+                                                {
+                                                    <span class="text-warning">Còn @daysLeft ngày</span>
+                                                }
+                                                else
+                                                {
+                                                    <span>Còn @daysLeft ngày</span>
+                                                }
+                                            }
+                                        </small>
+                                    </td>
+                                    <td>
+                                        @if (task.Status == "Hoàn thành")
+                                        {
+                                            <span class="badge bg-success">Hoàn thành</span>
+                                        }
+                                        else if (task.Status == "Đang thực hiện")
+                                        {
+                                            <span class="badge bg-primary">Đang thực hiện</span>
+                                        }
+                                        else if (task.Status == "Tạm dừng")
+                                        {
+                                            <span class="badge bg-secondary">Tạm dừng</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-light text-dark">Chưa bắt đầu</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        <div class="progress" style="height: 25px;">
+                                            <div class="progress-bar @(task.Progress == 100 ? "bg-success" : "bg-info")" 
+                                                 role="progressbar" 
+                                                 style="width: @task.Progress%"
+                                                 aria-valuenow="@task.Progress" 
+                                                 aria-valuemin="0" 
+                                                 aria-valuemax="100">
+                                                @task.Progress%
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="text-center">
+                                        <div class="btn-group" role="group">
+                                            <a asp-action="Details" asp-route-id="@task.Id" 
+                                               class="btn btn-sm btn-outline-info" title="Xem chi tiết">
+                                                <i class="bi bi-eye"></i>
+                                            </a>
+                                            <a asp-action="Edit" asp-route-id="@task.Id" 
+                                               class="btn btn-sm btn-outline-primary" title="Sửa">
+                                                <i class="bi bi-pencil"></i>
+                                            </a>
+                                            <button type="button" class="btn btn-sm btn-outline-danger" 
+                                                    title="Xóa"
+                                                    onclick="confirmDelete(@task.Id, '@task.TaskName')">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-3">
+            <p class="text-muted">
+                <i class="bi bi-info-circle"></i> 
+                Tổng số: <strong>@Model.Count()</strong> công việc | 
+                Hoàn thành: <strong>@Model.Count(t => t.Status == "Hoàn thành")</strong> | 
+                Đang thực hiện: <strong>@Model.Count(t => t.Status == "Đang thực hiện")</strong> |
+                Quá hạn: <strong class="text-danger">@Model.Count(t => t.IsOverdue)</strong>
+            </p>
+        </div>
+    }
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">Xác nhận xóa</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Bạn có chắc chắn muốn xóa công việc: <strong id="taskNameToDelete"></strong>?</p>
+                <p class="text-danger"><i class="bi bi-exclamation-triangle"></i> Hành động này không thể hoàn tác!</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <form id="deleteForm" method="post" style="display:inline;">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn btn-danger">Xóa</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function confirmDelete(taskId, taskName) {
+            document.getElementById('taskNameToDelete').textContent = taskName;
+            document.getElementById('deleteForm').action = '/Task/Delete/' + taskId;
+            var deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
+            deleteModal.show();
+        }
+    </script>
+}

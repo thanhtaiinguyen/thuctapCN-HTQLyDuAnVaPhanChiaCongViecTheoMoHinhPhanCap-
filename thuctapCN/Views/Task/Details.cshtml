@@ -1,0 +1,205 @@
+@model thuctapCN.Models.TaskDetailsViewModel
+
+@{
+    ViewData["Title"] = "Chi tiết công việc";
+}
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-10 offset-md-1">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h4 class="mb-0">
+                            <i class="bi bi-file-text"></i> Chi tiết công việc
+                        </h4>
+                        @if (Model.IsOverdue)
+                        {
+                            <span class="badge bg-danger">Quá hạn</span>
+                        }
+                    </div>
+                </div>
+                <div class="card-body">
+                    @if (TempData["SuccessMessage"] != null)
+                    {
+                        <div class="alert alert-success alert-dismissible fade show">
+                            <i class="bi bi-check-circle"></i> @TempData["SuccessMessage"]
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    }
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <h5 class="text-primary">@Model.TaskName</h5>
+                            <p class="text-muted mb-1">
+                                <i class="bi bi-folder"></i> Dự án: <strong>@Model.ProjectCode - @Model.ProjectName</strong>
+                            </p>
+                        </div>
+                        <div class="col-md-6 text-md-end">
+                            @if (Model.Priority == "Cao")
+                            {
+                                <span class="badge bg-danger fs-6">🔴 Cao</span>
+                            }
+                            else if (Model.Priority == "Trung bình")
+                            {
+                                <span class="badge bg-warning text-dark fs-6">🟡 Trung bình</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-success fs-6">🟢 Thấp</span>
+                            }
+                        </div>
+                    </div>
+
+                    <hr />
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <p><strong>Người được giao:</strong></p>
+                            <p class="ms-3">
+                                <i class="bi bi-person-circle"></i> @Model.AssignedToUserName
+                                <br />
+                                <small class="text-muted">Mã NV: @Model.AssignedToEmployeeCode</small>
+                            </p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>Deadline:</strong></p>
+                            <p class="ms-3">
+                                <i class="bi bi-calendar-event"></i> @Model.Deadline.ToString("dd/MM/yyyy")
+                                @{
+                                    var daysLeft = (Model.Deadline.Date - DateTime.Now.Date).Days;
+                                    if (daysLeft < 0)
+                                    {
+                                        <br /><small class="text-danger">Quá hạn @Math.Abs(daysLeft) ngày</small>
+                                    }
+                                    else if (daysLeft == 0)
+                                    {
+                                        <br /><small class="text-warning">Hôm nay là deadline!</small>
+                                    }
+                                    else if (daysLeft <= 2)
+                                    {
+                                        <br /><small class="text-warning">Còn @daysLeft ngày</small>
+                                    }
+                                    else
+                                    {
+                                        <br /><small class="text-muted">Còn @daysLeft ngày</small>
+                                    }
+                                }
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <p><strong>Trạng thái:</strong></p>
+                            <p class="ms-3">
+                                @if (Model.Status == "Hoàn thành")
+                                {
+                                    <span class="badge bg-success fs-6">✓ Hoàn thành</span>
+                                }
+                                else if (Model.Status == "Đang thực hiện")
+                                {
+                                    <span class="badge bg-primary fs-6">⟳ Đang thực hiện</span>
+                                }
+                                else if (Model.Status == "Tạm dừng")
+                                {
+                                    <span class="badge bg-secondary fs-6">⏸ Tạm dừng</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-light text-dark fs-6">○ Chưa bắt đầu</span>
+                                }
+                            </p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>Tiến độ:</strong></p>
+                            <div class="progress ms-3" style="height: 30px;">
+                                <div class="progress-bar @(Model.Progress == 100 ? "bg-success" : "bg-info")" 
+                                     role="progressbar" 
+                                     style="width: @Model.Progress%"
+                                     aria-valuenow="@Model.Progress" 
+                                     aria-valuemin="0" 
+                                     aria-valuemax="100">
+                                    <strong>@Model.Progress%</strong>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    @if (!string.IsNullOrEmpty(Model.Description))
+                    {
+                        <div class="mb-3">
+                            <p><strong>Mô tả:</strong></p>
+                            <div class="ms-3 p-3 bg-light rounded">
+                                @Model.Description
+                            </div>
+                        </div>
+                    }
+
+                    @if (!string.IsNullOrEmpty(Model.Notes))
+                    {
+                        <div class="mb-3">
+                            <p><strong>Ghi chú/Báo cáo:</strong></p>
+                            <div class="ms-3 p-3 bg-light rounded">
+                                @Model.Notes
+                            </div>
+                        </div>
+                    }
+
+                    @if (!string.IsNullOrEmpty(Model.AttachmentPath))
+                    {
+                        <div class="mb-3">
+                            <p><strong>File đính kèm:</strong></p>
+                            <p class="ms-3">
+                                <a href="@Model.AttachmentPath" target="_blank" class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-download"></i> Tải xuống file
+                                </a>
+                            </p>
+                        </div>
+                    }
+
+                    <hr />
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <small class="text-muted">
+                                <i class="bi bi-clock-history"></i> Ngày tạo: @Model.CreatedDate.ToString("dd/MM/yyyy HH:mm")
+                            </small>
+                        </div>
+                        <div class="col-md-6 text-md-end">
+                            @if (Model.UpdatedDate.HasValue)
+                            {
+                                <small class="text-muted">
+                                    <i class="bi bi-arrow-repeat"></i> Cập nhật lần cuối: @Model.UpdatedDate.Value.ToString("dd/MM/yyyy HH:mm")
+                                </small>
+                            }
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <a asp-action="Index" asp-route-projectId="@Model.ProjectId" class="btn btn-secondary">
+                                <i class="bi bi-arrow-left"></i> Quay lại
+                            </a>
+                        </div>
+                        <div>
+                            @if (Model.CanUpdateStatus)
+                            {
+                                <a asp-action="UpdateStatus" asp-route-id="@Model.Id" class="btn btn-success me-2">
+                                    <i class="bi bi-arrow-repeat"></i> Cập nhật trạng thái
+                                </a>
+                            }
+                            @if (Model.CanEdit)
+                            {
+                                <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary">
+                                    <i class="bi bi-pencil"></i> Sửa
+                                </a>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

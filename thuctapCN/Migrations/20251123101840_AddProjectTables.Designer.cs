@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using thuctapCN.Data;
 
@@ -11,9 +12,11 @@ using thuctapCN.Data;
 namespace thuctapCN.Migrations
 {
     [DbContext(typeof(thuctapCNContext))]
-    partial class thuctapCNContextModelSnapshot : ModelSnapshot
+    [Migration("20251123101840_AddProjectTables")]
+    partial class AddProjectTables
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -254,12 +257,8 @@ namespace thuctapCN.Migrations
 
                     b.HasIndex("EmployeeCode")
                         .IsUnique()
-<<<<<<< HEAD
                         .HasDatabaseName("IX_ApplicationUser_EmployeeCode")
                         .HasFilter("[EmployeeCode] IS NOT NULL");
-=======
-                        .HasDatabaseName("IX_ApplicationUser_EmployeeCode");
->>>>>>> 7929cc674e75331a1e771f61be947e49f8e3755f
 
                     b.HasIndex("NormalizedEmail")
                         .HasDatabaseName("EmailIndex");
@@ -272,7 +271,6 @@ namespace thuctapCN.Migrations
                     b.ToTable("AspNetUsers", (string)null);
                 });
 
-<<<<<<< HEAD
             modelBuilder.Entity("thuctapCN.Models.Project", b =>
                 {
                     b.Property<int>("Id")
@@ -354,79 +352,6 @@ namespace thuctapCN.Migrations
                     b.ToTable("ProjectMembers");
                 });
 
-            modelBuilder.Entity("thuctapCN.Models.TaskAssignment", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("AssignedToUserId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<string>("AttachmentPath")
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
-
-                    b.Property<DateTime>("CreatedDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime>("Deadline")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Description")
-                        .HasMaxLength(2000)
-                        .HasColumnType("nvarchar(2000)");
-
-                    b.Property<string>("Notes")
-                        .HasMaxLength(2000)
-                        .HasColumnType("nvarchar(2000)");
-
-                    b.Property<string>("Priority")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
-
-                    b.Property<int>("Progress")
-                        .HasColumnType("int");
-
-                    b.Property<int>("ProjectId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasMaxLength(30)
-                        .HasColumnType("nvarchar(30)");
-
-                    b.Property<string>("TaskName")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
-
-                    b.Property<DateTime?>("UpdatedDate")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("AssignedToUserId")
-                        .HasDatabaseName("IX_TaskAssignment_AssignedToUserId");
-
-                    b.HasIndex("Deadline")
-                        .HasDatabaseName("IX_TaskAssignment_Deadline");
-
-                    b.HasIndex("ProjectId")
-                        .HasDatabaseName("IX_TaskAssignment_ProjectId");
-
-                    b.HasIndex("Status")
-                        .HasDatabaseName("IX_TaskAssignment_Status");
-
-                    b.ToTable("TaskAssignments");
-                });
-
-=======
->>>>>>> 7929cc674e75331a1e771f61be947e49f8e3755f
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
                 {
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", null)
@@ -495,25 +420,6 @@ namespace thuctapCN.Migrations
                     b.Navigation("Project");
 
                     b.Navigation("User");
-                });
-
-            modelBuilder.Entity("thuctapCN.Models.TaskAssignment", b =>
-                {
-                    b.HasOne("thuctapCN.Models.ApplicationUser", "AssignedToUser")
-                        .WithMany()
-                        .HasForeignKey("AssignedToUserId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("thuctapCN.Models.Project", "Project")
-                        .WithMany()
-                        .HasForeignKey("ProjectId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("AssignedToUser");
-
-                    b.Navigation("Project");
                 });
 
             modelBuilder.Entity("thuctapCN.Models.Project", b =>

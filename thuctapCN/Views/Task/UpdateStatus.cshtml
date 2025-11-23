@@ -1,0 +1,107 @@
+@model thuctapCN.Models.UpdateTaskStatusViewModel
+
+@{
+    ViewData["Title"] = "Cập nhật trạng thái công việc";
+}
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h4 class="mb-0">
+                        <i class="bi bi-arrow-repeat"></i> Cập nhật trạng thái công việc
+                    </h4>
+                    <small>@Model.TaskName</small>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle"></i> 
+                        <strong>Dự án:</strong> @Model.ProjectName
+                        <br />
+                        <strong>Tiến độ hiện tại:</strong> @Model.CurrentProgress%
+                    </div>
+
+                    <form asp-action="UpdateStatus" method="post" enctype="multipart/form-data">
+                        <input type="hidden" asp-for="Id" />
+                        
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+
+                        <div class="mb-3">
+                            <label asp-for="Status" class="form-label"></label>
+                            <select asp-for="Status" class="form-select">
+                                <option value="Chưa bắt đầu">○ Chưa bắt đầu</option>
+                                <option value="Đang thực hiện">⟳ Đang thực hiện</option>
+                                <option value="Hoàn thành">✓ Hoàn thành</option>
+                                <option value="Tạm dừng">⏸ Tạm dừng</option>
+                            </select>
+                            <span asp-validation-for="Status" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Progress" class="form-label"></label>
+                            <input asp-for="Progress" type="range" class="form-range" min="0" max="100" step="5" 
+                                   oninput="document.getElementById('progressValue').textContent = this.value + '%'" />
+                            <div class="text-center">
+                                <strong><span id="progressValue">@Model.Progress%</span></strong>
+                            </div>
+                            <span asp-validation-for="Progress" class="text-danger"></span>
+                            <small class="form-text text-muted">
+                                <i class="bi bi-exclamation-circle"></i> 
+                                Lưu ý: Nếu chọn trạng thái "Hoàn thành", tiến độ phải là 100%
+                            </small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Notes" class="form-label"></label>
+                            <textarea asp-for="Notes" class="form-control" rows="5" 
+                                      placeholder="Nhập ghi chú hoặc báo cáo tiến độ công việc..."></textarea>
+                            <span asp-validation-for="Notes" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="AttachmentFile" class="form-label"></label>
+                            <input asp-for="AttachmentFile" type="file" class="form-control" 
+                                   accept=".pdf,.doc,.docx,.xls,.xlsx,.zip,.rar,.jpg,.jpeg,.png" />
+                            <span asp-validation-for="AttachmentFile" class="text-danger"></span>
+                            <small class="form-text text-muted">
+                                <i class="bi bi-info-circle"></i> 
+                                Định dạng hỗ trợ: PDF, DOC, DOCX, XLS, XLSX, ZIP, RAR, JPG, PNG (Tối đa 10MB)
+                            </small>
+                            @if (!string.IsNullOrEmpty(Model.CurrentAttachmentPath))
+                            {
+                                <div class="mt-2">
+                                    <small class="text-muted">
+                                        File hiện tại: 
+                                        <a href="@Model.CurrentAttachmentPath" target="_blank">
+                                            <i class="bi bi-file-earmark"></i> Xem file đã đính kèm
+                                        </a>
+                                    </small>
+                                </div>
+                            }
+                        </div>
+
+                        <div class="d-flex justify-content-between mt-4">
+                            <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-secondary">
+                                <i class="bi bi-arrow-left"></i> Hủy
+                            </a>
+                            <button type="submit" class="btn btn-success">
+                                <i class="bi bi-check-circle"></i> Cập nhật
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        // Initialize progress value display
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('progressValue').textContent = document.querySelector('input[type="range"]').value + '%';
+        });
+    </script>
+}
