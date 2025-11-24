@@ -288,10 +288,13 @@ namespace thuctapCN.Controllers
             var isManager = await _context.ProjectMembers
                 .AnyAsync(pm => pm.ProjectId == task.ProjectId && pm.UserId == currentUser.Id && pm.Role == "Manager");
 
+            var isInProject = await _context.ProjectMembers
+                .AnyAsync(pm => pm.ProjectId == task.ProjectId && pm.UserId == currentUser.Id);
+
             var isAssignedUser = task.AssignedToUserId == currentUser.Id;
             var isAdmin = User.IsInRole("Admin");
 
-            if (!isManager && !isAssignedUser && !isAdmin)
+            if (!isManager && !isInProject && !isAssignedUser && !isAdmin)
             {
                 return Forbid();
             }
@@ -320,6 +323,28 @@ namespace thuctapCN.Controllers
                 CanUpdateStatus = isAssignedUser || isManager || isAdmin
             };
 
+            // Load comments
+            var comments = await _context.TaskComments
+                .Where(c => c.TaskAssignmentId == id)
+                .Include(c => c.User)
+                .OrderBy(c => c.CreatedDate)
+                .Select(c => new CommentViewModel
+                {
+                    Id = c.Id,
+                    Content = c.Content,
+                    UserId = c.UserId,
+                    UserName = c.User.FullName ?? c.User.Email ?? "",
+                    UserAvatar = c.User.AvatarPath,
+                    CreatedDate = c.CreatedDate,
+                    UpdatedDate = c.UpdatedDate,
+                    CanEdit = c.UserId == currentUser.Id,
+                    CanDelete = c.UserId == currentUser.Id || isManager || isAdmin
+                })
+                .ToListAsync();
+
+            ViewBag.Comments = comments;
+            ViewBag.CanComment = isAssignedUser || isInProject || isAdmin;
+
             return View(model);
         }
 
@@ -345,7 +370,8 @@ namespace thuctapCN.Controllers
 
                 if (!isManager)
                 {
-                    return Forbid();
+                    TempData["ErrorMessage"] = "Bạn không có quyền cập nhật công việc này. Chỉ Manager hoặc Admin mới có quyền chỉnh sửa thông tin công việc.";
+                    return RedirectToAction(nameof(Details), new { id });
                 }
             }
 
@@ -696,6 +722,170 @@ namespace thuctapCN.Controllers
                 
                 return View(model);
             }
+        }
+
+        // POST: Task/AddComment
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AddComment(int taskId, string content)
+        {
+            var currentUser = await _userManager.GetUserAsync(User);
+            if (currentUser == null) return NotFound();
+
+            var task = await _context.TaskAssignments
+                .Include(t => t.Project)
+                .FirstOrDefaultAsync(t => t.Id == taskId);
+
+            if (task == null) return NotFound();
+
+            // Check authorization: assigned user, project member, or admin
+            var isAssignedUser = task.AssignedToUserId == currentUser.Id;
+            
+            var isInProject = await _context.ProjectMembers
+                .AnyAsync(pm => pm.ProjectId == task.ProjectId && pm.UserId == currentUser.Id);
+
+            var isAdmin = User.IsInRole("Admin");
+
+            if (!isAssignedUser && !isInProject && !isAdmin)
+            {
+                TempData["ErrorMessage"] = "Bạn không có quyền bình luận trong công việc này.";
+                return RedirectToAction(nameof(Details), new { id = taskId });
+            }
+
+            // Validate content
+            if (string.IsNullOrWhiteSpace(content))
+            {
+                TempData["ErrorMessage"] = "Nội dung bình luận không được để trống.";
+                return RedirectToAction(nameof(Details), new { id = taskId });
+            }
+
+            if (content.Length > 2000)
+            {
+                TempData["ErrorMessage"] = "Nội dung bình luận không được vượt quá 2000 ký tự.";
+                return RedirectToAction(nameof(Details), new { id = taskId });
+            }
+
+            try
+            {
+                var comment = new TaskComment
+                {
+                    TaskAssignmentId = taskId,
+                    UserId = currentUser.Id,
+                    Content = content.Trim(),
+                    CreatedDate = DateTime.Now
+                };
+
+                _context.TaskComments.Add(comment);
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation($"User {currentUser.Email} commented on task {task.TaskName}");
+                TempData["SuccessMessage"] = "Đã thêm bình luận thành công!";
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error adding comment");
+                TempData["ErrorMessage"] = "Không thể thêm bình luận. Vui lòng thử lại sau.";
+            }
+
+            return RedirectToAction(nameof(Details), new { id = taskId });
+        }
+
+        // POST: Task/EditComment
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> EditComment(int commentId, string content, int taskId)
+        {
+            var currentUser = await _userManager.GetUserAsync(User);
+            if (currentUser == null) return NotFound();
+
+            var comment = await _context.TaskComments.FindAsync(commentId);
+            if (comment == null) return NotFound();
+
+            // Check if user is the owner
+            if (comment.UserId != currentUser.Id)
+            {
+                TempData["ErrorMessage"] = "Bạn chỉ có thể sửa bình luận của chính mình.";
+                return RedirectToAction(nameof(Details), new { id = taskId });
+            }
+
+            // Validate content
+            if (string.IsNullOrWhiteSpace(content))
+            {
+                TempData["ErrorMessage"] = "Nội dung bình luận không được để trống.";
+                return RedirectToAction(nameof(Details), new { id = taskId });
+            }
+
+            if (content.Length > 2000)
+            {
+                TempData["ErrorMessage"] = "Nội dung bình luận không được vượt quá 2000 ký tự.";
+                return RedirectToAction(nameof(Details), new { id = taskId });
+            }
+
+            try
+            {
+                comment.Content = content.Trim();
+                comment.UpdatedDate = DateTime.Now;
+
+                _context.Update(comment);
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation($"User {currentUser.Email} edited comment {commentId}");
+                TempData["SuccessMessage"] = "Đã cập nhật bình luận thành công!";
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error editing comment");
+                TempData["ErrorMessage"] = "Không thể cập nhật bình luận. Vui lòng thử lại sau.";
+            }
+
+            return RedirectToAction(nameof(Details), new { id = taskId });
+        }
+
+        // POST: Task/DeleteComment
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteComment(int commentId, int taskId)
+        {
+            var currentUser = await _userManager.GetUserAsync(User);
+            if (currentUser == null) return NotFound();
+
+            var comment = await _context.TaskComments
+                .Include(c => c.TaskAssignment)
+                .FirstOrDefaultAsync(c => c.Id == commentId);
+
+            if (comment == null) return NotFound();
+
+            // Check authorization: owner, manager, or admin
+            var isOwner = comment.UserId == currentUser.Id;
+
+            var isManager = await _context.ProjectMembers
+                .AnyAsync(pm => pm.ProjectId == comment.TaskAssignment.ProjectId && 
+                               pm.UserId == currentUser.Id && 
+                               pm.Role == "Manager");
+
+            var isAdmin = User.IsInRole("Admin");
+
+            if (!isOwner && !isManager && !isAdmin)
+            {
+                TempData["ErrorMessage"] = "Bạn không có quyền xóa bình luận này.";
+                return RedirectToAction(nameof(Details), new { id = taskId });
+            }
+
+            try
+            {
+                _context.TaskComments.Remove(comment);
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation($"Comment {commentId} deleted by {currentUser.Email}");
+                TempData["SuccessMessage"] = "Đã xóa bình luận thành công!";
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error deleting comment");
+                TempData["ErrorMessage"] = "Không thể xóa bình luận. Vui lòng thử lại sau.";
+            }
+
+            return RedirectToAction(nameof(Details), new { id = taskId });
         }
     }
 }

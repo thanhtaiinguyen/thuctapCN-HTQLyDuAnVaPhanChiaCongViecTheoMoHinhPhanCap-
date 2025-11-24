@@ -10,7 +10,6 @@ namespace thuctapCN.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-<<<<<<< HEAD
             // Drop index nếu đã tồn tại
             migrationBuilder.Sql(@"
                 IF EXISTS (SELECT * FROM sys.indexes WHERE name = 'IX_ApplicationUser_EmployeeCode' AND object_id = OBJECT_ID('AspNetUsers'))
@@ -19,8 +18,6 @@ namespace thuctapCN.Migrations
                 END
             ");
 
-=======
->>>>>>> 7929cc674e75331a1e771f61be947e49f8e3755f
             migrationBuilder.AlterColumn<string>(
                 name: "EmployeeCode",
                 table: "AspNetUsers",
@@ -37,12 +34,8 @@ namespace thuctapCN.Migrations
                 name: "IX_ApplicationUser_EmployeeCode",
                 table: "AspNetUsers",
                 column: "EmployeeCode",
-<<<<<<< HEAD
                 unique: true,
                 filter: "[EmployeeCode] IS NOT NULL");
-=======
-                unique: true);
->>>>>>> 7929cc674e75331a1e771f61be947e49f8e3755f
         }
 
         /// <inheritdoc />

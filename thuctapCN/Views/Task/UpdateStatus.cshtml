@@ -101,7 +101,89 @@
     <script>
         // Initialize progress value display
         document.addEventListener('DOMContentLoaded', function() {
-            document.getElementById('progressValue').textContent = document.querySelector('input[type="range"]').value + '%';
+            const progressSlider = document.querySelector('input[type="range"]');
+            const progressValue = document.getElementById('progressValue');
+            const statusSelect = document.querySelector('select[name="Status"]');
+            const form = document.querySelector('form');
+            const notesTextarea = document.querySelector('textarea[name="Notes"]');
+
+            // Initialize progress display
+            if (progressSlider && progressValue) {
+                progressValue.textContent = progressSlider.value + '%';
+            }
+
+            // Real-time validation: If status is "Hoàn thành", progress must be 100%
+            if (statusSelect && progressSlider) {
+                statusSelect.addEventListener('change', function() {
+                    if (this.value === 'Hoàn thành' && progressSlider.value < 100) {
+                        progressSlider.value = 100;
+                        progressValue.textContent = '100%';
+                    }
+                });
+
+                progressSlider.addEventListener('input', function() {
+                    progressValue.textContent = this.value + '%';
+                    
+                    // Warning if "Hoàn thành" but progress < 100%
+                    if (statusSelect.value === 'Hoàn thành' && this.value < 100) {
+                        progressValue.classList.add('text-danger');
+                    } else {
+                        progressValue.classList.remove('text-danger');
+                    }
+                });
+            }
+
+            // Form submission validation
+            if (form) {
+                form.addEventListener('submit', function(e) {
+                    let isValid = true;
+                    let errorMsg = '';
+
+                    // Check if status is selected
+                    if (!statusSelect || !statusSelect.value) {
+                        isValid = false;
+                        errorMsg = 'Vui lòng chọn trạng thái công việc.';
+                    }
+                    // Check if "Hoàn thành" requires 100% progress
+                    else if (statusSelect.value === 'Hoàn thành' && progressSlider.value < 100) {
+                        isValid = false;
+                        errorMsg = 'Trạng thái "Hoàn thành" yêu cầu tiến độ phải là 100%.';
+                    }
+
+                    if (!isValid) {
+                        e.preventDefault();
+                        alert(errorMsg);
+                        return false;
+                    }
+                });
+            }
+
+            // Limit notes textarea to 2000 characters with counter
+            if (notesTextarea) {
+                const maxLength = 2000;
+                const counterDiv = document.createElement('div');
+                counterDiv.className = 'text-end text-muted small mt-1';
+                counterDiv.innerHTML = '<span id="charCount">0</span>/' + maxLength + ' ký tự';
+                notesTextarea.parentNode.insertBefore(counterDiv, notesTextarea.nextSibling);
+                
+                const charCount = document.getElementById('charCount');
+                
+                function updateCharCount() {
+                    const count = notesTextarea.value.length;
+                    charCount.textContent = count;
+                    
+                    if (count > maxLength) {
+                        charCount.classList.add('text-danger');
+                        charCount.classList.remove('text-muted');
+                    } else {
+                        charCount.classList.remove('text-danger');
+                        charCount.classList.add('text-muted');
+                    }
+                }
+                
+                notesTextarea.addEventListener('input', updateCharCount);
+                updateCharCount(); // Initialize
+            }
         });
     </script>
 }

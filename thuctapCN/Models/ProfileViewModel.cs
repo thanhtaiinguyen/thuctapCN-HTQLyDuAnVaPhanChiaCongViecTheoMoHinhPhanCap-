@@ -53,7 +53,6 @@ namespace thuctapCN.Models
         [Display(Name = "Ngày cập nhật")]
         public DateTime? UpdatedDate { get; set; }
     }
-<<<<<<< HEAD
 
     public class ProfileChangePasswordViewModel
     {
@@ -63,7 +62,7 @@ namespace thuctapCN.Models
         public string CurrentPassword { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "Mật khẩu mới là bắt buộc")]
-        [StringLength(100, ErrorMessage = "Mật khẩu phải có ít nhất {2} ký tự.", MinimumLength = 6)]
+        [StringLength(16, ErrorMessage = "Mật khẩu phải có từ {2} đến {1} ký tự.", MinimumLength = 8)]
         [DataType(DataType.Password)]
         [Display(Name = "Mật khẩu mới")]
         public string NewPassword { get; set; } = string.Empty;
@@ -73,7 +72,5 @@ namespace thuctapCN.Models
         [Compare("NewPassword", ErrorMessage = "Mật khẩu mới và mật khẩu xác nhận không khớp.")]
         public string ConfirmPassword { get; set; } = string.Empty;
     }
-=======
->>>>>>> 7929cc674e75331a1e771f61be947e49f8e3755f
 }
 
