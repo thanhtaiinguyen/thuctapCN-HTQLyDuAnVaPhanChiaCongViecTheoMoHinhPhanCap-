@@ -93,13 +93,13 @@ namespace thuctapCN.Controllers
                     return NotFound();
                 }
 
-                // Kiểm tra user chỉ được sửa thông tin của chính mình
+                // Kiểm tra người dùng chỉ được sửa thông tin của chính mình
                 if (user.Id != model.Id)
                 {
                     return Forbid();
                 }
 
-                // Xử lý upload ảnh đại diện
+                // Xử lý tải lên ảnh đại diện
                 if (avatarFile != null && avatarFile.Length > 0)
                 {
                     // Kiểm tra định dạng file
@@ -119,8 +119,8 @@ namespace thuctapCN.Controllers
                         return View(model);
                     }
 
-                    // Tạo thư mục uploads nếu chưa có
-                    var uploadsFolder = Path.Combine(_environment.WebRootPath, "uploads", "avatars");
+                    // Tạo thư mục images nếu chưa có
+                    var uploadsFolder = Path.Combine(_environment.WebRootPath, "images");
                     try
                     {
                         if (!Directory.Exists(uploadsFolder))
@@ -130,12 +130,12 @@ namespace thuctapCN.Controllers
                     }
                     catch (Exception ex)
                     {
-                        _logger.LogError(ex, "Không thể tạo thư mục uploads");
+                        _logger.LogError(ex, "Không thể tạo thư mục images");
                         ModelState.AddModelError("AvatarPath", "Không thể tạo thư mục lưu ảnh. Vui lòng liên hệ quản trị viên.");
                         return View(model);
                     }
 
-                    // Tạo tên file unique
+                    // Tạo tên file duy nhất
                     var fileName = $"{user.Id}_{DateTime.Now:yyyyMMddHHmmss}{fileExtension}";
                     var filePath = Path.Combine(uploadsFolder, fileName);
 
@@ -155,15 +155,15 @@ namespace thuctapCN.Controllers
                         await avatarFile.CopyToAsync(stream);
                     }
 
-                    // Lưu đường dẫn ảnh (relative path)
-                    user.AvatarPath = $"/uploads/avatars/{fileName}";
+                    // Lưu đường dẫn ảnh (đường dẫn tương đối)
+                    user.AvatarPath = $"/images/{fileName}";
                 }
 
-                // Cập nhật thông tin user (không cho phép sửa EmployeeCode)
+                // Cập nhật thông tin người dùng (không cho phép sửa Mã nhân viên)
                 user.Email = model.Email;
                 user.UserName = model.Email;
                 user.FullName = model.FullName;
-                // EmployeeCode không được chỉnh sửa - giữ nguyên giá trị cũ
+                // Mã nhân viên không được chỉnh sửa - giữ nguyên giá trị cũ
                 // user.EmployeeCode = model.EmployeeCode; // Không cho phép sửa
                 user.PhoneNumber = model.PhoneNumber;
                 user.Address = model.Address;

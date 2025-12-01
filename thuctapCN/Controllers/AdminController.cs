@@ -51,7 +51,7 @@ namespace thuctapCN.Controllers
         {
             if (ModelState.IsValid)
             {
-                // Kiểm tra EmployeeCode đã tồn tại chưa (chỉ kiểm tra nếu không rỗng)
+                // Kiểm tra Mã nhân viên đã tồn tại chưa (chỉ kiểm tra nếu không rỗng)
                 if (!string.IsNullOrWhiteSpace(model.EmployeeCode))
                 {
                     var existingUser = await _userManager.Users
@@ -77,14 +77,14 @@ namespace thuctapCN.Controllers
 
                 if (result.Succeeded)
                 {
-                    // Gán roles cho user
+                    // Gán quyền cho người dùng
                     if (model.SelectedRoles != null && model.SelectedRoles.Any())
                     {
                         await _userManager.AddToRolesAsync(user, model.SelectedRoles);
                     }
                     else
                     {
-                        // Mặc định gán role "User" nếu không chọn role nào
+                        // Mặc định gán quyền "User" nếu không chọn quyền nào
                         await _userManager.AddToRoleAsync(user, "User");
                     }
 
@@ -141,7 +141,7 @@ namespace thuctapCN.Controllers
 
                 user.Email = model.Email;
                 user.UserName = model.Email;
-                // EmployeeCode không được chỉnh sửa - giữ nguyên giá trị cũ
+                // Mã nhân viên không được chỉnh sửa - giữ nguyên giá trị cũ
                 // user.EmployeeCode = model.EmployeeCode; // Không cho phép sửa
 
                 var result = await _userManager.UpdateAsync(user);

@@ -1,188 +1,135 @@
 @model thuctapCN.Models.UpdateTaskStatusViewModel
 
 @{
-    ViewData["Title"] = "Cập nhật trạng thái công việc";
+    ViewData["Title"] = "Báo cáo công việc";
 }
 
-<div class="container mt-4">
-    <div class="row">
-        <div class="col-md-8 offset-md-2">
-            <div class="card">
-                <div class="card-header bg-success text-white">
-                    <h4 class="mb-0">
-                        <i class="bi bi-arrow-repeat"></i> Cập nhật trạng thái công việc
-                    </h4>
-                    <small>@Model.TaskName</small>
-                </div>
-                <div class="card-body">
-                    <div class="alert alert-info">
-                        <i class="bi bi-info-circle"></i> 
-                        <strong>Dự án:</strong> @Model.ProjectName
-                        <br />
-                        <strong>Tiến độ hiện tại:</strong> @Model.CurrentProgress%
-                    </div>
+<div class="container mt-5" style="max-width: 800px;">
+    <div class="mb-4">
+        <h2 class="fw-bold text-dark mb-1">@Model.TaskName</h2>
+        <p class="text-muted">
+            Thuộc dự án: <span class="fw-medium text-primary">@Model.ProjectName</span>
+        </p>
+    </div>
 
-                    <form asp-action="UpdateStatus" method="post" enctype="multipart/form-data">
-                        <input type="hidden" asp-for="Id" />
-                        
-                        <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+    <form asp-action="UpdateStatus" method="post" enctype="multipart/form-data" class="needs-validation">
+        <input type="hidden" asp-for="Id" />
+        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
 
-                        <div class="mb-3">
-                            <label asp-for="Status" class="form-label"></label>
-                            <select asp-for="Status" class="form-select">
-                                <option value="Chưa bắt đầu">○ Chưa bắt đầu</option>
-                                <option value="Đang thực hiện">⟳ Đang thực hiện</option>
-                                <option value="Hoàn thành">✓ Hoàn thành</option>
-                                <option value="Tạm dừng">⏸ Tạm dừng</option>
-                            </select>
-                            <span asp-validation-for="Status" class="text-danger"></span>
-                        </div>
+        <div class="row g-4 mb-4">
+            <div class="col-md-6">
+                <label asp-for="Status" class="form-label fw-medium text-secondary small text-uppercase">Trạng thái hiện tại</label>
+                <select asp-for="Status" class="form-select border-0 bg-light py-2">
+                    <option value="Chưa bắt đầu">○ Chưa bắt đầu</option>
+                    <option value="Đang thực hiện">⟳ Đang thực hiện</option>
+                    <option value="Hoàn thành">✓ Hoàn thành</option>
+                    <option value="Tạm dừng">⏸ Tạm dừng</option>
+                </select>
+                <span asp-validation-for="Status" class="text-danger small"></span>
+            </div>
 
-                        <div class="mb-3">
-                            <label asp-for="Progress" class="form-label"></label>
-                            <input asp-for="Progress" type="range" class="form-range" min="0" max="100" step="5" 
-                                   oninput="document.getElementById('progressValue').textContent = this.value + '%'" />
-                            <div class="text-center">
-                                <strong><span id="progressValue">@Model.Progress%</span></strong>
-                            </div>
-                            <span asp-validation-for="Progress" class="text-danger"></span>
-                            <small class="form-text text-muted">
-                                <i class="bi bi-exclamation-circle"></i> 
-                                Lưu ý: Nếu chọn trạng thái "Hoàn thành", tiến độ phải là 100%
-                            </small>
-                        </div>
-
-                        <div class="mb-3">
-                            <label asp-for="Notes" class="form-label"></label>
-                            <textarea asp-for="Notes" class="form-control" rows="5" 
-                                      placeholder="Nhập ghi chú hoặc báo cáo tiến độ công việc..."></textarea>
-                            <span asp-validation-for="Notes" class="text-danger"></span>
-                        </div>
-
-                        <div class="mb-3">
-                            <label asp-for="AttachmentFile" class="form-label"></label>
-                            <input asp-for="AttachmentFile" type="file" class="form-control" 
-                                   accept=".pdf,.doc,.docx,.xls,.xlsx,.zip,.rar,.jpg,.jpeg,.png" />
-                            <span asp-validation-for="AttachmentFile" class="text-danger"></span>
-                            <small class="form-text text-muted">
-                                <i class="bi bi-info-circle"></i> 
-                                Định dạng hỗ trợ: PDF, DOC, DOCX, XLS, XLSX, ZIP, RAR, JPG, PNG (Tối đa 10MB)
-                            </small>
-                            @if (!string.IsNullOrEmpty(Model.CurrentAttachmentPath))
-                            {
-                                <div class="mt-2">
-                                    <small class="text-muted">
-                                        File hiện tại: 
-                                        <a href="@Model.CurrentAttachmentPath" target="_blank">
-                                            <i class="bi bi-file-earmark"></i> Xem file đã đính kèm
-                                        </a>
-                                    </small>
-                                </div>
-                            }
-                        </div>
-
-                        <div class="d-flex justify-content-between mt-4">
-                            <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-secondary">
-                                <i class="bi bi-arrow-left"></i> Hủy
-                            </a>
-                            <button type="submit" class="btn btn-success">
-                                <i class="bi bi-check-circle"></i> Cập nhật
-                            </button>
-                        </div>
-                    </form>
-                </div>
+            <div class="col-md-6">
+                <label asp-for="Progress" class="form-label fw-medium text-secondary small text-uppercase d-flex justify-content-between">
+                    <span>Tiến độ hoàn thành</span>
+                    <span id="progressValue" class="text-primary fw-bold">@Model.Progress%</span>
+                </label>
+                <input asp-for="Progress" type="range" class="form-range" min="0" max="100" step="5" 
+                       oninput="document.getElementById('progressValue').textContent = this.value + '%'" />
+                <span asp-validation-for="Progress" class="text-danger small"></span>
             </div>
         </div>
-    </div>
+
+        <div class="mb-4">
+            <label asp-for="Notes" class="form-label fw-medium text-secondary small text-uppercase">Nội dung báo cáo</label>
+            <textarea asp-for="Notes" class="form-control border-light shadow-sm p-3" rows="8" 
+                      placeholder="Mô tả chi tiết công việc bạn đã làm, những khó khăn gặp phải hoặc kết quả đạt được..."
+                      style="resize: vertical; background-color: #fcfcfc;"></textarea>
+            <span asp-validation-for="Notes" class="text-danger small"></span>
+            <div class="text-end mt-1">
+                <small class="text-muted" id="charCount">0/2000 ký tự</small>
+            </div>
+        </div>
+
+        <div class="mb-5">
+            <label asp-for="AttachmentFile" class="form-label fw-medium text-secondary small text-uppercase">
+                <i class="bi bi-paperclip"></i> Đính kèm tài liệu (nếu có)
+            </label>
+            <input asp-for="AttachmentFile" type="file" class="form-control form-control-sm" 
+                   accept=".pdf,.doc,.docx,.xls,.xlsx,.zip,.rar,.jpg,.jpeg,.png" />
+            <span asp-validation-for="AttachmentFile" class="text-danger small"></span>
+            
+            @if (!string.IsNullOrEmpty(Model.CurrentAttachmentPath))
+            {
+                <div class="mt-2 p-2 bg-light rounded d-inline-block">
+                    <small class="text-muted me-2">File hiện tại:</small>
+                    <a href="@Model.CurrentAttachmentPath" target="_blank" class="text-decoration-none">
+                        <i class="bi bi-file-earmark-text"></i> Xem file cũ
+                    </a>
+                </div>
+            }
+        </div>
+
+        <div class="d-flex align-items-center gap-3">
+            <button type="submit" class="btn btn-primary px-4 py-2 fw-medium">
+                Gửi báo cáo
+            </button>
+            <a asp-action="Details" asp-route-id="@Model.Id" class="text-decoration-none text-secondary px-3">
+                Hủy bỏ
+            </a>
+        </div>
+    </form>
 </div>
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
     <script>
-        // Initialize progress value display
         document.addEventListener('DOMContentLoaded', function() {
             const progressSlider = document.querySelector('input[type="range"]');
             const progressValue = document.getElementById('progressValue');
             const statusSelect = document.querySelector('select[name="Status"]');
-            const form = document.querySelector('form');
             const notesTextarea = document.querySelector('textarea[name="Notes"]');
+            const charCount = document.getElementById('charCount');
 
-            // Initialize progress display
+            // Update progress value
             if (progressSlider && progressValue) {
-                progressValue.textContent = progressSlider.value + '%';
-            }
-
-            // Real-time validation: If status is "Hoàn thành", progress must be 100%
-            if (statusSelect && progressSlider) {
-                statusSelect.addEventListener('change', function() {
-                    if (this.value === 'Hoàn thành' && progressSlider.value < 100) {
-                        progressSlider.value = 100;
-                        progressValue.textContent = '100%';
-                    }
-                });
-
                 progressSlider.addEventListener('input', function() {
                     progressValue.textContent = this.value + '%';
                     
-                    // Warning if "Hoàn thành" but progress < 100%
-                    if (statusSelect.value === 'Hoàn thành' && this.value < 100) {
-                        progressValue.classList.add('text-danger');
-                    } else {
-                        progressValue.classList.remove('text-danger');
+                    // Auto update status to "Hoàn thành" if 100%
+                    if (this.value == 100 && statusSelect) {
+                        statusSelect.value = 'Hoàn thành';
+                    } else if (this.value < 100 && statusSelect && statusSelect.value === 'Hoàn thành') {
+                        statusSelect.value = 'Đang thực hiện';
                     }
                 });
             }
 
-            // Form submission validation
-            if (form) {
-                form.addEventListener('submit', function(e) {
-                    let isValid = true;
-                    let errorMsg = '';
-
-                    // Check if status is selected
-                    if (!statusSelect || !statusSelect.value) {
-                        isValid = false;
-                        errorMsg = 'Vui lòng chọn trạng thái công việc.';
-                    }
-                    // Check if "Hoàn thành" requires 100% progress
-                    else if (statusSelect.value === 'Hoàn thành' && progressSlider.value < 100) {
-                        isValid = false;
-                        errorMsg = 'Trạng thái "Hoàn thành" yêu cầu tiến độ phải là 100%.';
-                    }
-
-                    if (!isValid) {
-                        e.preventDefault();
-                        alert(errorMsg);
-                        return false;
+            // Update status logic
+            if (statusSelect && progressSlider) {
+                statusSelect.addEventListener('change', function() {
+                    if (this.value === 'Hoàn thành') {
+                        progressSlider.value = 100;
+                        progressValue.textContent = '100%';
+                    } else if (this.value === 'Chưa bắt đầu') {
+                        progressSlider.value = 0;
+                        progressValue.textContent = '0%';
                     }
                 });
             }
 
-            // Limit notes textarea to 2000 characters with counter
-            if (notesTextarea) {
-                const maxLength = 2000;
-                const counterDiv = document.createElement('div');
-                counterDiv.className = 'text-end text-muted small mt-1';
-                counterDiv.innerHTML = '<span id="charCount">0</span>/' + maxLength + ' ký tự';
-                notesTextarea.parentNode.insertBefore(counterDiv, notesTextarea.nextSibling);
-                
-                const charCount = document.getElementById('charCount');
-                
-                function updateCharCount() {
-                    const count = notesTextarea.value.length;
-                    charCount.textContent = count;
-                    
-                    if (count > maxLength) {
+            // Character counter
+            if (notesTextarea && charCount) {
+                notesTextarea.addEventListener('input', function() {
+                    const currentLength = this.value.length;
+                    charCount.textContent = currentLength + '/2000 ký tự';
+                    if (currentLength > 2000) {
                         charCount.classList.add('text-danger');
-                        charCount.classList.remove('text-muted');
                     } else {
                         charCount.classList.remove('text-danger');
-                        charCount.classList.add('text-muted');
                     }
-                }
-                
-                notesTextarea.addEventListener('input', updateCharCount);
-                updateCharCount(); // Initialize
+                });
+                // Init
+                charCount.textContent = notesTextarea.value.length + '/2000 ký tự';
             }
         });
     </script>

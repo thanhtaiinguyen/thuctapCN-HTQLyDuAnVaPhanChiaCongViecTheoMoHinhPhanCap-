@@ -67,17 +67,7 @@ body {
     }
 }
 
-/* Dark-mode tốt hơn nếu dùng prefers-color-scheme */
-@media (prefers-color-scheme: dark) {
-    .login-card {
-        background: rgba(17,24,39,.9);
-        border-color: rgba(255,255,255,.08);
-    }
 
-    .login-form {
-        color: #e5e7eb;
-    }
-}
 
 /* Nhỏ xíu UX */
 .form-floating > label > i {

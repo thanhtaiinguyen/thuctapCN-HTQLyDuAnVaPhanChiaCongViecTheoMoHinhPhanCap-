@@ -31,7 +31,7 @@ namespace thuctapCN.Models
         [Display(Name = "Thành viên được giao")]
         public string AssignedToUserId { get; set; } = string.Empty;
 
-        // For populating dropdown
+        // Để điền dữ liệu vào dropdown
         public List<ApplicationUser> AvailableMembers { get; set; } = new();
         public DateTime ProjectStartDate { get; set; }
         public DateTime ProjectEndDate { get; set; }
@@ -74,7 +74,7 @@ namespace thuctapCN.Models
         [Display(Name = "Tiến độ (%)")]
         public int Progress { get; set; } = 0;
 
-        // For populating dropdown
+        // Để điền dữ liệu vào dropdown
         public List<ApplicationUser> AvailableMembers { get; set; } = new();
         public DateTime ProjectStartDate { get; set; }
         public DateTime ProjectEndDate { get; set; }
@@ -135,12 +135,12 @@ namespace thuctapCN.Models
         public DateTime CreatedDate { get; set; }
         public DateTime? UpdatedDate { get; set; }
 
-        // Project info
+        // Thông tin dự án
         public int ProjectId { get; set; }
         public string ProjectName { get; set; } = string.Empty;
         public string ProjectCode { get; set; } = string.Empty;
 
-        // Assigned user info
+        // Thông tin người được giao
         public string AssignedToUserId { get; set; } = string.Empty;
         public string AssignedToUserName { get; set; } = string.Empty;
         public string AssignedToEmployeeCode { get; set; } = string.Empty;
