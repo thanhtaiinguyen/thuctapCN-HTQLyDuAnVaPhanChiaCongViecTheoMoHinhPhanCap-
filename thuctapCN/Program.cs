@@ -1,7 +1,9 @@
 ﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.EntityFrameworkCore;
 using thuctapCN.Data;
 using thuctapCN.Models;
+using thuctapCN.Services;
 
 namespace thuctapCN
 {
@@ -11,7 +13,7 @@ namespace thuctapCN
         {
             var builder = WebApplication.CreateBuilder(args);
 
-            // Lấy chuỗi kết nối từ appsettings.json hoặc Environment Variables
+            // Lấy chuỗi kết nối từ appsettings.json hoặc Biến môi trường
             var connectionString = builder.Configuration.GetConnectionString("thuctapCNContextConnection")
                 ?? Environment.GetEnvironmentVariable("ConnectionStrings__thuctapCNContextConnection")
                 ?? throw new InvalidOperationException("Connection string 'thuctapCNContextConnection' not found.");
@@ -20,24 +22,27 @@ namespace thuctapCN
             builder.Services.AddDbContext<thuctapCNContext>(options =>
                 options.UseSqlServer(connectionString));
 
-            // Cấu hình Identity với Roles
+            // Cấu hình Identity với Quyền
             builder.Services.AddDefaultIdentity<ApplicationUser>(options =>
             {
                 // Tắt xác nhận email để đăng nhập dễ hơn 
                 options.SignIn.RequireConfirmedAccount = false;
                 
-                // Cấu hình password
+                // Cấu hình mật khẩu
                 options.Password.RequireDigit = true;
                 options.Password.RequireLowercase = true;
                 options.Password.RequireUppercase = true;
                 options.Password.RequireNonAlphanumeric = false;
                 options.Password.RequiredLength = 6;
                 
-                // Cấu hình user
+                // Cấu hình người dùng
                 options.User.RequireUniqueEmail = true;
             })
             .AddRoles<IdentityRole>()
             .AddEntityFrameworkStores<thuctapCNContext>();
+
+            // Đăng ký Email Sender (Console Email Sender cho môi trường phát triển)
+            builder.Services.AddTransient<IEmailSender, ConsoleEmailSender>();
 
             // Thêm MVC
             builder.Services.AddControllersWithViews();
@@ -50,7 +55,7 @@ namespace thuctapCN
                 Directory.CreateDirectory(app.Environment.WebRootPath);
             }
 
-            // Middleware pipeline
+            // Luồng xử lý Middleware
             if (!app.Environment.IsDevelopment())
             {
                 app.UseExceptionHandler("/Home/Error");
@@ -74,7 +79,7 @@ namespace thuctapCN
             app.UseHttpsRedirection();
             app.UseStaticFiles();
             
-            // Tạo thư mục uploads và cấu hình static files
+            // Tạo thư mục uploads và cấu hình file tĩnh
             var uploadsPath = Path.Combine(app.Environment.WebRootPath, "uploads");
             if (!Directory.Exists(uploadsPath))
             {
@@ -99,6 +104,8 @@ namespace thuctapCN
                 if (!context.User.Identity?.IsAuthenticated == true &&
                     !path.StartsWith("/identity/account/login") &&
                     !path.StartsWith("/identity/account/register") &&
+                    !path.StartsWith("/identity/account/forgotpassword") &&
+                    !path.StartsWith("/identity/account/resetpassword") &&
                     !path.StartsWith("/css") &&
                     !path.StartsWith("/js") &&
                     !path.StartsWith("/lib") &&
@@ -111,7 +118,7 @@ namespace thuctapCN
                 await next();
             });
 
-            // Mặc định routing
+            // Định tuyến mặc định
             app.MapControllerRoute(
                 name: "default",
                 pattern: "{controller=Home}/{action=Index}/{id?}");
@@ -136,7 +143,7 @@ namespace thuctapCN
                 }
             }
 
-            // Chạy migration và seed dữ liệu
+            // Chạy migration và khởi tạo dữ liệu mẫu
             using (var scope = app.Services.CreateScope())
             {
                 var services = scope.ServiceProvider;
@@ -146,11 +153,11 @@ namespace thuctapCN
                 {
                     var context = services.GetRequiredService<thuctapCNContext>();
                     
-                    // Cleanup dữ liệu TRƯỚC KHI kiểm tra migrations
+                    // Dọn dẹp dữ liệu TRƯỚC KHI kiểm tra migrations
                     logger.LogInformation("Đang cleanup dữ liệu...");
                     await SeedData.CleanupBeforeMigration(services);
                     
-                    // Kiểm tra xem có pending migrations không
+                    // Kiểm tra xem có migration nào đang chờ không
                     var pendingMigrations = await context.Database.GetPendingMigrationsAsync();
                     
                     if (pendingMigrations.Any())
@@ -160,7 +167,7 @@ namespace thuctapCN
                         logger.LogInformation("Đã chạy migration thành công.");
                     }
 
-                    // Seed dữ liệu sau khi migration hoàn thành
+                    // Khởi tạo dữ liệu mẫu sau khi migration hoàn thành
                     var shouldSeed = Environment.GetEnvironmentVariable("RUN_SEED_DATA") == "true" || app.Environment.IsDevelopment();
                     if (shouldSeed)
                     {
@@ -171,7 +178,7 @@ namespace thuctapCN
                 catch (Exception ex)
                 {
                     logger.LogError(ex, "Lỗi khi khởi tạo database: {Error}", ex.Message);
-                    // Không throw exception để app vẫn có thể chạy
+                    // Không ném ngoại lệ để ứng dụng vẫn có thể chạy
                 }
             }
 

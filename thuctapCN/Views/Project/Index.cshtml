@@ -86,6 +86,10 @@
                                                    class="btn btn-sm btn-outline-primary" title="Chỉnh sửa">
                                                     <i class="bi bi-pencil"></i>
                                                 </a>
+                                                <a asp-action="Delete" asp-route-id="@project.Id" 
+                                                   class="btn btn-sm btn-outline-danger" title="Xóa dự án">
+                                                    <i class="bi bi-trash"></i>
+                                                </a>
                                             }
                                             <a asp-action="AddMember" asp-route-id="@project.Id" 
                                                class="btn btn-sm btn-outline-success" title="Thêm thành viên">

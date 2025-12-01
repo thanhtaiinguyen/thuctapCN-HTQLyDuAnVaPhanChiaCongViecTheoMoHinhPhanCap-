@@ -41,11 +41,17 @@
                 Ghi nhớ đăng nhập
             </label>
         </div>
-        <a asp-page="./ForgotPassword" class="forgot-password-link">Quên mật khẩu?</a>
+        <a href="/Identity/Account/ForgotPassword" class="forgot-password-link">Quên mật khẩu?</a>
     </div>
 
     <button type="submit" class="btn btn-login">Đăng nhập</button>
 </form>
+
+<div class="text-center mt-3">
+    <a href="/Identity/Account/ForgotPassword" class="text-decoration-none">
+        <small>Quên mật khẩu? Click vào đây</small>
+    </a>
+</div>
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />

@@ -55,7 +55,7 @@ namespace thuctapCN.Controllers
 
             if (result.Succeeded)
             {
-                // Đăng nhập lại để refresh security stamp
+                // Đăng nhập lại để làm mới dấu bảo mật
                 await _signInManager.RefreshSignInAsync(user);
 
                 _logger.LogInformation($"User {user.Email} đã đổi mật khẩu thành công.");

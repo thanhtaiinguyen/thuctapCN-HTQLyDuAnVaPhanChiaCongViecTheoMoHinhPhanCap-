@@ -27,7 +27,7 @@ namespace thuctapCN.Controllers
             _environment = environment;
         }
 
-        // GET: Task/Index/{projectId} - Danh sách tasks của dự án (Manager/Admin)
+        // GET: Công việc/Danh sách/{projectId} - Danh sách công việc của dự án (Quản lý/Admin)
         public async Task<IActionResult> Index(int? projectId)
         {
             if (projectId == null) return NotFound();
@@ -38,7 +38,7 @@ namespace thuctapCN.Controllers
             var project = await _context.Projects.FindAsync(projectId);
             if (project == null) return NotFound();
 
-            // Check if user is Manager of this project or is Admin
+            // Kiểm tra xem người dùng có phải là Quản lý của dự án này hoặc là Admin không
             if (!User.IsInRole("Admin"))
             {
                 var isManager = await _context.ProjectMembers
@@ -80,7 +80,7 @@ namespace thuctapCN.Controllers
             return View(tasks);
         }
 
-        // GET: Task/MyTasks - Danh sách công việc của member
+        // GET: Công việc/Của tôi - Danh sách công việc của thành viên
         public async Task<IActionResult> MyTasks()
         {
             var currentUser = await _userManager.GetUserAsync(User);
@@ -112,7 +112,7 @@ namespace thuctapCN.Controllers
             return View(tasks);
         }
 
-        // GET: Task/Create/{projectId} - Form tạo task (Manager/Admin)
+        // GET: Công việc/Tạo mới/{projectId} - Form tạo công việc (Quản lý/Admin)
         public async Task<IActionResult> Create(int? projectId)
         {
             if (projectId == null) return NotFound();
@@ -123,7 +123,7 @@ namespace thuctapCN.Controllers
             var project = await _context.Projects.FindAsync(projectId);
             if (project == null) return NotFound();
 
-            // Check if user is Manager of this project or is Admin
+            // Kiểm tra xem người dùng có phải là Quản lý của dự án này hoặc là Admin không
             if (!User.IsInRole("Admin"))
             {
                 var isManager = await _context.ProjectMembers
@@ -135,9 +135,9 @@ namespace thuctapCN.Controllers
                 }
             }
 
-            // Get members in this project
+            // Lấy danh sách thành viên trong dự án này
             var memberIds = await _context.ProjectMembers
-                .Where(pm => pm.ProjectId == projectId && pm.Role == "Member")
+                .Where(pm => pm.ProjectId == projectId)
                 .Select(pm => pm.UserId)
                 .ToListAsync();
 
@@ -160,7 +160,7 @@ namespace thuctapCN.Controllers
             return View(model);
         }
 
-        // POST: Task/Create
+        // POST: Công việc/Tạo mới
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(CreateTaskViewModel model)
@@ -171,7 +171,7 @@ namespace thuctapCN.Controllers
             var project = await _context.Projects.FindAsync(model.ProjectId);
             if (project == null) return NotFound();
 
-            // Check if user is Manager of this project or is Admin
+            // Kiểm tra xem người dùng có phải là Quản lý của dự án này hoặc là Admin không
             if (!User.IsInRole("Admin"))
             {
                 var isManager = await _context.ProjectMembers
@@ -183,19 +183,19 @@ namespace thuctapCN.Controllers
                 }
             }
 
-            // Validate deadline trong phạm vi dự án
+            // Xác thực ngày hoàn thành trong phạm vi dự án
             if (model.Deadline < project.StartDate || model.Deadline > project.EndDate)
             {
                 ModelState.AddModelError("Deadline", "Ngày hoàn thành phải nằm trong thời gian dự án.");
             }
 
-            // Validate deadline không sớm hơn ngày hiện tại
+            // Xác thực ngày hoàn thành không sớm hơn ngày hiện tại
             if (model.Deadline.Date < DateTime.Now.Date)
             {
                 ModelState.AddModelError("Deadline", "Ngày hoàn thành không thể sớm hơn ngày hiện tại.");
             }
 
-            // Validate member được chọn thuộc dự án
+            // Xác thực thành viên được chọn thuộc dự án
             var isMemberInProject = await _context.ProjectMembers
                 .AnyAsync(pm => pm.ProjectId == model.ProjectId && pm.UserId == model.AssignedToUserId);
 
@@ -206,9 +206,9 @@ namespace thuctapCN.Controllers
 
             if (!ModelState.IsValid)
             {
-                // Reload available members
+                // Tải lại danh sách thành viên khả dụng
                 var memberIds = await _context.ProjectMembers
-                    .Where(pm => pm.ProjectId == model.ProjectId && pm.Role == "Member")
+                    .Where(pm => pm.ProjectId == model.ProjectId)
                     .Select(pm => pm.UserId)
                     .ToListAsync();
 
@@ -251,9 +251,9 @@ namespace thuctapCN.Controllers
                 _logger.LogError(ex, "Lỗi khi tạo task");
                 ModelState.AddModelError(string.Empty, "Không thể lưu công việc. Vui lòng thử lại sau.");
 
-                // Reload available members
+                // Tải lại danh sách thành viên khả dụng
                 var memberIds = await _context.ProjectMembers
-                    .Where(pm => pm.ProjectId == model.ProjectId && pm.Role == "Member")
+                    .Where(pm => pm.ProjectId == model.ProjectId)
                     .Select(pm => pm.UserId)
                     .ToListAsync();
 
@@ -269,7 +269,7 @@ namespace thuctapCN.Controllers
             }
         }
 
-        // GET: Task/Details/{id}
+        // GET: Công việc/Chi tiết/{id}
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null) return NotFound();
@@ -284,7 +284,7 @@ namespace thuctapCN.Controllers
 
             if (task == null) return NotFound();
 
-            // Check authorization
+            // Kiểm tra quyền hạn
             var isManager = await _context.ProjectMembers
                 .AnyAsync(pm => pm.ProjectId == task.ProjectId && pm.UserId == currentUser.Id && pm.Role == "Manager");
 
@@ -323,7 +323,7 @@ namespace thuctapCN.Controllers
                 CanUpdateStatus = isAssignedUser || isManager || isAdmin
             };
 
-            // Load comments
+            // Tải bình luận
             var comments = await _context.TaskComments
                 .Where(c => c.TaskAssignmentId == id)
                 .Include(c => c.User)
@@ -348,7 +348,7 @@ namespace thuctapCN.Controllers
             return View(model);
         }
 
-        // GET: Task/Edit/{id} (Manager/Admin)
+        // GET: Công việc/Chỉnh sửa/{id} (Quản lý/Admin)
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null) return NotFound();
@@ -362,7 +362,7 @@ namespace thuctapCN.Controllers
 
             if (task == null) return NotFound();
 
-            // Check if user is Manager of this project or is Admin
+            // Kiểm tra xem người dùng có phải là Quản lý của dự án này hoặc là Admin không
             if (!User.IsInRole("Admin"))
             {
                 var isManager = await _context.ProjectMembers
@@ -375,9 +375,9 @@ namespace thuctapCN.Controllers
                 }
             }
 
-            // Get members in this project
+            // Lấy danh sách thành viên trong dự án này
             var memberIds = await _context.ProjectMembers
-                .Where(pm => pm.ProjectId == task.ProjectId && pm.Role == "Member")
+                .Where(pm => pm.ProjectId == task.ProjectId)
                 .Select(pm => pm.UserId)
                 .ToListAsync();
 
@@ -407,7 +407,7 @@ namespace thuctapCN.Controllers
             return View(model);
         }
 
-        // POST: Task/Edit/{id}
+        // POST: Công việc/Chỉnh sửa/{id}
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, EditTaskViewModel model)
@@ -423,7 +423,7 @@ namespace thuctapCN.Controllers
 
             if (task == null) return NotFound();
 
-            // Check if user is Manager of this project or is Admin
+            // Kiểm tra xem người dùng có phải là Quản lý của dự án này hoặc là Admin không
             if (!User.IsInRole("Admin"))
             {
                 var isManager = await _context.ProjectMembers
@@ -435,13 +435,13 @@ namespace thuctapCN.Controllers
                 }
             }
 
-            // Validate deadline trong phạm vi dự án
+            // Xác thực ngày hoàn thành trong phạm vi dự án
             if (model.Deadline < task.Project.StartDate || model.Deadline > task.Project.EndDate)
             {
                 ModelState.AddModelError("Deadline", "Ngày hoàn thành phải nằm trong thời gian dự án.");
             }
 
-            // Validate member được chọn thuộc dự án
+            // Xác thực thành viên được chọn thuộc dự án
             var isMemberInProject = await _context.ProjectMembers
                 .AnyAsync(pm => pm.ProjectId == task.ProjectId && pm.UserId == model.AssignedToUserId);
 
@@ -452,9 +452,9 @@ namespace thuctapCN.Controllers
 
             if (!ModelState.IsValid)
             {
-                // Reload available members
+                // Tải lại danh sách thành viên khả dụng
                 var memberIds = await _context.ProjectMembers
-                    .Where(pm => pm.ProjectId == task.ProjectId && pm.Role == "Member")
+                    .Where(pm => pm.ProjectId == task.ProjectId)
                     .Select(pm => pm.UserId)
                     .ToListAsync();
 
@@ -493,9 +493,9 @@ namespace thuctapCN.Controllers
                 _logger.LogError(ex, "Lỗi khi cập nhật task");
                 ModelState.AddModelError(string.Empty, "Không thể cập nhật công việc. Vui lòng thử lại sau.");
 
-                // Reload available members
+                // Tải lại danh sách thành viên khả dụng
                 var memberIds = await _context.ProjectMembers
-                    .Where(pm => pm.ProjectId == task.ProjectId && pm.Role == "Member")
+                    .Where(pm => pm.ProjectId == task.ProjectId)
                     .Select(pm => pm.UserId)
                     .ToListAsync();
 
@@ -511,7 +511,7 @@ namespace thuctapCN.Controllers
             }
         }
 
-        // POST: Task/Delete/{id} (Manager/Admin)
+        // POST: Công việc/Xóa/{id} (Quản lý/Admin)
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Delete(int id)
@@ -522,7 +522,7 @@ namespace thuctapCN.Controllers
             var task = await _context.TaskAssignments.FindAsync(id);
             if (task == null) return NotFound();
 
-            // Check if user is Manager of this project or is Admin
+            // Kiểm tra xem người dùng có phải là Quản lý của dự án này hoặc là Admin không
             if (!User.IsInRole("Admin"))
             {
                 var isManager = await _context.ProjectMembers
@@ -536,7 +536,7 @@ namespace thuctapCN.Controllers
 
             try
             {
-                // Delete attachment file if exists
+                // Xóa file đính kèm nếu tồn tại
                 if (!string.IsNullOrEmpty(task.AttachmentPath))
                 {
                     var filePath = Path.Combine(_environment.WebRootPath, task.AttachmentPath.TrimStart('/'));
@@ -562,7 +562,7 @@ namespace thuctapCN.Controllers
             }
         }
 
-        // GET: Task/UpdateStatus/{id} - Member cập nhật trạng thái
+        // GET: Công việc/Cập nhật trạng thái/{id} - Thành viên cập nhật trạng thái
         public async Task<IActionResult> UpdateStatus(int? id)
         {
             if (id == null) return NotFound();
@@ -576,7 +576,7 @@ namespace thuctapCN.Controllers
 
             if (task == null) return NotFound();
 
-            // Check authorization: must be assigned user, manager, or admin
+            // Kiểm tra quyền hạn: phải là người được giao, quản lý hoặc admin
             var isManager = await _context.ProjectMembers
                 .AnyAsync(pm => pm.ProjectId == task.ProjectId && pm.UserId == currentUser.Id && pm.Role == "Manager");
 
@@ -603,7 +603,7 @@ namespace thuctapCN.Controllers
             return View(model);
         }
 
-        // POST: Task/UpdateStatus/{id}
+        // POST: Công việc/Cập nhật trạng thái/{id}
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> UpdateStatus(int id, UpdateTaskStatusViewModel model)
@@ -619,7 +619,7 @@ namespace thuctapCN.Controllers
 
             if (task == null) return NotFound();
 
-            // Check authorization
+            // Kiểm tra quyền hạn
             var isManager = await _context.ProjectMembers
                 .AnyAsync(pm => pm.ProjectId == task.ProjectId && pm.UserId == currentUser.Id && pm.Role == "Manager");
 
@@ -631,22 +631,22 @@ namespace thuctapCN.Controllers
                 return Forbid();
             }
 
-            // Validate: Nếu status = "Hoàn thành" thì progress phải = 100%
+            // Xác thực: Nếu trạng thái = "Hoàn thành" thì tiến độ phải = 100%
             if (model.Status == "Hoàn thành" && model.Progress < 100)
             {
                 ModelState.AddModelError("Progress", "Trạng thái \"Hoàn thành\" yêu cầu tiến độ 100%. Vui lòng kiểm tra lại.");
             }
 
-            // Validate file upload
+            // Xác thực tải lên file
             if (model.AttachmentFile != null)
             {
-                // Check file size (10MB max)
+                // Kiểm tra kích thước file (tối đa 10MB)
                 if (model.AttachmentFile.Length > 10 * 1024 * 1024)
                 {
                     ModelState.AddModelError("AttachmentFile", "Kích thước file không được vượt quá 10MB.");
                 }
 
-                // Check file extension
+                // Kiểm tra đuôi file
                 var allowedExtensions = new[] { ".pdf", ".doc", ".docx", ".xls", ".xlsx", ".zip", ".rar", ".jpg", ".png", ".jpeg" };
                 var fileExtension = Path.GetExtension(model.AttachmentFile.FileName).ToLower();
                 if (!allowedExtensions.Contains(fileExtension))
@@ -671,10 +671,10 @@ namespace thuctapCN.Controllers
                 task.Notes = model.Notes;
                 task.UpdatedDate = DateTime.Now;
 
-                // Handle file upload
+                // Xử lý tải lên file
                 if (model.AttachmentFile != null)
                 {
-                    // Delete old file if exists
+                    // Xóa file cũ nếu tồn tại
                     if (!string.IsNullOrEmpty(task.AttachmentPath))
                     {
                         var oldFilePath = Path.Combine(_environment.WebRootPath, task.AttachmentPath.TrimStart('/'));
@@ -684,7 +684,7 @@ namespace thuctapCN.Controllers
                         }
                     }
 
-                    // Save new file
+                    // Lưu file mới
                     var uploadsFolder = Path.Combine(_environment.WebRootPath, "uploads", "tasks");
                     if (!Directory.Exists(uploadsFolder))
                     {
@@ -724,7 +724,7 @@ namespace thuctapCN.Controllers
             }
         }
 
-        // POST: Task/AddComment
+        // POST: Công việc/Thêm bình luận
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> AddComment(int taskId, string content)
@@ -738,7 +738,7 @@ namespace thuctapCN.Controllers
 
             if (task == null) return NotFound();
 
-            // Check authorization: assigned user, project member, or admin
+            // Kiểm tra quyền hạn: người được giao, thành viên dự án hoặc admin
             var isAssignedUser = task.AssignedToUserId == currentUser.Id;
             
             var isInProject = await _context.ProjectMembers
@@ -752,7 +752,7 @@ namespace thuctapCN.Controllers
                 return RedirectToAction(nameof(Details), new { id = taskId });
             }
 
-            // Validate content
+            // Xác thực nội dung
             if (string.IsNullOrWhiteSpace(content))
             {
                 TempData["ErrorMessage"] = "Nội dung bình luận không được để trống.";
@@ -790,7 +790,7 @@ namespace thuctapCN.Controllers
             return RedirectToAction(nameof(Details), new { id = taskId });
         }
 
-        // POST: Task/EditComment
+        // POST: Công việc/Chỉnh sửa bình luận
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> EditComment(int commentId, string content, int taskId)

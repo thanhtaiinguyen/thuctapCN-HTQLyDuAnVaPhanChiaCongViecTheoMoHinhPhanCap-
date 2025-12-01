@@ -13,15 +13,16 @@ using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.WebUtilities;
+using thuctapCN.Models;
 
 namespace thuctapCN.Areas.Identity.Pages.Account
 {
     public class ForgotPasswordModel : PageModel
     {
-        private readonly UserManager<IdentityUser> _userManager;
+        private readonly UserManager<ApplicationUser> _userManager;
         private readonly IEmailSender _emailSender;
 
-        public ForgotPasswordModel(UserManager<IdentityUser> userManager, IEmailSender emailSender)
+        public ForgotPasswordModel(UserManager<ApplicationUser> userManager, IEmailSender emailSender)
         {
             _userManager = userManager;
             _emailSender = emailSender;
@@ -49,14 +50,22 @@ namespace thuctapCN.Areas.Identity.Pages.Account
             public string Email { get; set; }
         }
 
+        public void OnGet()
+        {
+            // Allow GET requests to display the page
+        }
+
         public async Task<IActionResult> OnPostAsync()
         {
             if (ModelState.IsValid)
             {
                 var user = await _userManager.FindByEmailAsync(Input.Email);
-                if (user == null || !(await _userManager.IsEmailConfirmedAsync(user)))
+                
+                // Trong development mode, không yêu cầu email confirmed
+                // Kiểm tra xem user có tồn tại không
+                if (user == null)
                 {
-                    // Don't reveal that the user does not exist or is not confirmed
+                    // Không tiết lộ user không tồn tại (security best practice)
                     return RedirectToPage("./ForgotPasswordConfirmation");
                 }
 

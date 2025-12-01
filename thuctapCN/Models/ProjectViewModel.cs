@@ -26,7 +26,7 @@ namespace thuctapCN.Models
         [Display(Name = "Chọn Manager")]
         public List<string> SelectedManagerIds { get; set; } = new();
 
-        // For populating dropdown
+        // Để điền dữ liệu vào dropdown
         public List<ApplicationUser> AvailableUsers { get; set; } = new();
     }
 
