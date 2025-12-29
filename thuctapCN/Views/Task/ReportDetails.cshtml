@@ -1,0 +1,141 @@
+@model thuctapCN.Models.ReportDetailsViewModel
+
+@{
+    ViewData["Title"] = "Chi tiết báo cáo";
+}
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-10 offset-md-1">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h4 class="mb-0">
+                            <i class="bi bi-file-earmark-text"></i> Chi tiết báo cáo
+                        </h4>
+                        @if (Model.IsRead)
+                        {
+                            <span class="badge bg-success"><i class="bi bi-check-circle"></i> Đã đọc</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-warning text-dark"><i class="bi bi-envelope"></i> Chưa đọc</span>
+                        }
+                    </div>
+                </div>
+                <div class="card-body">
+                    @if (TempData["SuccessMessage"] != null)
+                    {
+                        <div class="alert alert-success alert-dismissible fade show">
+                            <i class="bi bi-check-circle"></i> @TempData["SuccessMessage"]
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    }
+                    @if (TempData["ErrorMessage"] != null)
+                    {
+                        <div class="alert alert-danger alert-dismissible fade show">
+                            <i class="bi bi-exclamation-circle"></i> @TempData["ErrorMessage"]
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    }
+
+                    <!-- Thông tin công việc -->
+                    <div class="alert alert-light border mb-4">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p class="mb-1">
+                                    <i class="bi bi-folder"></i> <strong>Dự án:</strong> 
+                                    @Model.ProjectCode - @Model.ProjectName
+                                </p>
+                                <p class="mb-0">
+                                    <i class="bi bi-list-task"></i> <strong>Công việc:</strong> 
+                                    <a asp-action="Details" asp-route-id="@Model.TaskAssignmentId">@Model.TaskName</a>
+                                </p>
+                            </div>
+                            <div class="col-md-6 text-md-end">
+                                <p class="mb-1">
+                                    <i class="bi bi-clock"></i> <strong>Ngày gửi:</strong> 
+                                    @Model.CreatedDate.ToString("dd/MM/yyyy HH:mm")
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Người gửi -->
+                    <div class="d-flex align-items-center mb-4">
+                        @if (!string.IsNullOrEmpty(Model.UserAvatar))
+                        {
+                            <img src="@Model.UserAvatar" alt="Avatar" 
+                                 class="rounded-circle me-3" style="width: 60px; height: 60px; object-fit: cover;">
+                        }
+                        else
+                        {
+                            <div class="rounded-circle bg-primary d-flex align-items-center justify-content-center me-3" 
+                                 style="width: 60px; height: 60px;">
+                                <span class="text-white fw-bold fs-4">@Model.UserName.Substring(0, 1).ToUpper()</span>
+                            </div>
+                        }
+                        <div>
+                            <h5 class="mb-0">@Model.UserName</h5>
+                            <small class="text-muted">Mã NV: @Model.UserEmployeeCode</small>
+                        </div>
+                    </div>
+
+                    <hr />
+
+                    <!-- Tiến độ -->
+                    <div class="mb-4">
+                        <h6 class="fw-bold"><i class="bi bi-bar-chart"></i> Tiến độ công việc</h6>
+                        <div class="progress" style="height: 30px;">
+                            <div class="progress-bar @(Model.CurrentProgress >= 100 ? "bg-success" : "bg-info")" 
+                                 style="width: @Model.CurrentProgress%">
+                                <strong>@Model.CurrentProgress%</strong>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tiêu đề -->
+                    <div class="mb-4">
+                        <h6 class="fw-bold"><i class="bi bi-bookmark"></i> Tiêu đề</h6>
+                        <h4 class="text-primary">@Model.Title</h4>
+                    </div>
+
+                    <!-- Nội dung -->
+                    <div class="mb-4">
+                        <h6 class="fw-bold"><i class="bi bi-card-text"></i> Nội dung báo cáo</h6>
+                        <div class="p-3 bg-light rounded" style="white-space: pre-wrap;">@Model.Content</div>
+                    </div>
+
+                    <!-- File đính kèm -->
+                    @if (!string.IsNullOrEmpty(Model.AttachmentPath))
+                    {
+                        <div class="mb-4">
+                            <h6 class="fw-bold"><i class="bi bi-paperclip"></i> File đính kèm</h6>
+                            <a href="@Model.AttachmentPath" target="_blank" class="btn btn-outline-primary">
+                                <i class="bi bi-download"></i> Tải xuống file
+                            </a>
+                        </div>
+                    }
+                </div>
+                <div class="card-footer">
+                    <div class="d-flex justify-content-between">
+                        <a asp-action="ViewReports" asp-route-taskId="@Model.TaskAssignmentId" class="btn btn-secondary">
+                            <i class="bi bi-arrow-left"></i> Quay lại danh sách
+                        </a>
+                        @if (Model.CanDelete)
+                        {
+                            <form asp-action="DeleteReport" method="post" 
+                                  onsubmit="return confirm('Bạn có chắc muốn xóa báo cáo này?');">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="reportId" value="@Model.Id" />
+                                <button type="submit" class="btn btn-danger">
+                                    <i class="bi bi-trash"></i> Xóa báo cáo
+                                </button>
+                            </form>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

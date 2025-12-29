@@ -887,5 +887,327 @@ namespace thuctapCN.Controllers
 
             return RedirectToAction(nameof(Details), new { id = taskId });
         }
+        // GET: Task/CreateReport/{taskId} - Form gửi báo cáo
+        public async Task<IActionResult> CreateReport(int? taskId)
+        {
+            if (taskId == null) return NotFound();
+
+            var currentUser = await _userManager.GetUserAsync(User);
+            if (currentUser == null) return NotFound();
+
+            var task = await _context.TaskAssignments
+                .Include(t => t.Project)
+                .FirstOrDefaultAsync(t => t.Id == taskId);
+
+            if (task == null) return NotFound();
+
+            // Chỉ người được giao mới gửi báo cáo
+            if (task.AssignedToUserId != currentUser.Id && !User.IsInRole("Admin"))
+            {
+                TempData["ErrorMessage"] = "Bạn không có quyền gửi báo cáo cho công việc này!";
+                return RedirectToAction("Details", new { id = taskId });
+            }
+
+            return View(new CreateReportViewModel
+            {
+                TaskAssignmentId = task.Id,
+                TaskName = task.TaskName,
+                ProjectName = task.Project.Name,
+                CurrentProgress = task.Progress
+            });
+        }
+
+        // POST: Task/CreateReport
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> CreateReport(CreateReportViewModel model)
+        {
+            var currentUser = await _userManager.GetUserAsync(User);
+            if (currentUser == null) return NotFound();
+
+            var task = await _context.TaskAssignments
+                .Include(t => t.Project)
+                .FirstOrDefaultAsync(t => t.Id == model.TaskAssignmentId);
+
+            if (task == null) return NotFound();
+
+            // Kiểm tra quyền
+            if (task.AssignedToUserId != currentUser.Id && !User.IsInRole("Admin"))
+            {
+                TempData["ErrorMessage"] = "Bạn không có quyền gửi báo cáo!";
+                return RedirectToAction("Details", new { id = model.TaskAssignmentId });
+            }
+
+            if (!ModelState.IsValid)
+            {
+                model.TaskName = task.TaskName;
+                model.ProjectName = task.Project.Name;
+                return View(model);
+            }
+
+            try
+            {
+                var report = new TaskReport
+                {
+                    TaskAssignmentId = model.TaskAssignmentId,
+                    UserId = currentUser.Id,
+                    Title = model.Title,
+                    Content = model.Content,
+                    CurrentProgress = model.CurrentProgress,
+                    CreatedDate = DateTime.Now
+                };
+
+                // Upload file nếu có
+                if (model.AttachmentFile != null && model.AttachmentFile.Length > 0)
+                {
+                    var allowedExtensions = new[] { ".pdf", ".doc", ".docx", ".xls", ".xlsx", ".zip", ".jpg", ".png" };
+                    var extension = Path.GetExtension(model.AttachmentFile.FileName).ToLower();
+
+                    if (!allowedExtensions.Contains(extension))
+                    {
+                        ModelState.AddModelError("AttachmentFile", "Định dạng file không hợp lệ!");
+                        model.TaskName = task.TaskName;
+                        model.ProjectName = task.Project.Name;
+                        return View(model);
+                    }
+
+                    if (model.AttachmentFile.Length > 10 * 1024 * 1024)
+                    {
+                        ModelState.AddModelError("AttachmentFile", "File không được vượt quá 10MB!");
+                        model.TaskName = task.TaskName;
+                        model.ProjectName = task.Project.Name;
+                        return View(model);
+                    }
+
+                    var uploadPath = Path.Combine(_environment.WebRootPath, "uploads", "reports");
+                    if (!Directory.Exists(uploadPath)) Directory.CreateDirectory(uploadPath);
+
+                    var fileName = $"{task.Id}_{DateTime.Now:yyyyMMddHHmmss}_{model.AttachmentFile.FileName}";
+                    var filePath = Path.Combine(uploadPath, fileName);
+
+                    using (var stream = new FileStream(filePath, FileMode.Create))
+                    {
+                        await model.AttachmentFile.CopyToAsync(stream);
+                    }
+
+                    report.AttachmentPath = $"/uploads/reports/{fileName}";
+                }
+
+                // Cập nhật tiến độ công việc
+                task.Progress = model.CurrentProgress;
+                task.UpdatedDate = DateTime.Now;
+
+                _context.TaskReports.Add(report);
+                _context.TaskAssignments.Update(task);
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation($"User {currentUser.Email} đã gửi báo cáo cho công việc {task.TaskName}");
+                TempData["SuccessMessage"] = "Đã gửi báo cáo thành công!";
+                return RedirectToAction("Details", new { id = task.Id });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Lỗi khi gửi báo cáo");
+                ModelState.AddModelError("", "Có lỗi xảy ra, vui lòng thử lại!");
+                model.TaskName = task.TaskName;
+                model.ProjectName = task.Project.Name;
+                return View(model);
+            }
+        }
+
+        // GET: Task/ViewReports/{taskId} - Xem danh sách báo cáo (Manager/Admin)
+        public async Task<IActionResult> ViewReports(int? taskId)
+        {
+            if (taskId == null) return NotFound();
+
+            var currentUser = await _userManager.GetUserAsync(User);
+            if (currentUser == null) return NotFound();
+
+            var task = await _context.TaskAssignments
+                .Include(t => t.Project)
+                .FirstOrDefaultAsync(t => t.Id == taskId);
+
+            if (task == null) return NotFound();
+
+            // Kiểm tra quyền: Manager, Admin, hoặc người được giao
+            bool isAdmin = User.IsInRole("Admin");
+            bool isManager = await _context.ProjectMembers
+                .AnyAsync(pm => pm.ProjectId == task.ProjectId && pm.UserId == currentUser.Id && pm.Role == "Manager");
+            bool isAssigned = task.AssignedToUserId == currentUser.Id;
+
+            if (!isAdmin && !isManager && !isAssigned)
+            {
+                return Forbid();
+            }
+
+            var reports = await _context.TaskReports
+                .Where(r => r.TaskAssignmentId == taskId)
+                .Include(r => r.User)
+                .OrderByDescending(r => r.CreatedDate)
+                .Select(r => new ReportListViewModel
+                {
+                    Id = r.Id,
+                    TaskAssignmentId = r.TaskAssignmentId,
+                    TaskName = task.TaskName,
+                    ProjectId = task.ProjectId,
+                    ProjectName = task.Project.Name,
+                    UserId = r.UserId,
+                    UserName = r.User.FullName ?? r.User.Email ?? "",
+                    UserAvatar = r.User.AvatarPath,
+                    Title = r.Title,
+                    ContentPreview = r.Content.Length > 100 ? r.Content.Substring(0, 100) + "..." : r.Content,
+                    CurrentProgress = r.CurrentProgress,
+                    IsRead = r.IsRead,
+                    HasAttachment = !string.IsNullOrEmpty(r.AttachmentPath),
+                    CreatedDate = r.CreatedDate
+                })
+                .ToListAsync();
+
+            ViewBag.TaskId = taskId;
+            ViewBag.TaskName = task.TaskName;
+            ViewBag.ProjectName = task.Project.Name;
+            ViewBag.ProjectId = task.ProjectId;
+            ViewBag.CanCreateReport = isAssigned || isAdmin;
+
+            return View(reports);
+        }
+
+        // GET: Task/ReportDetails/{reportId} - Xem chi tiết báo cáo
+        public async Task<IActionResult> ReportDetails(int? id)
+        {
+            if (id == null) return NotFound();
+
+            var currentUser = await _userManager.GetUserAsync(User);
+            if (currentUser == null) return NotFound();
+
+            var report = await _context.TaskReports
+                .Include(r => r.TaskAssignment).ThenInclude(t => t.Project)
+                .Include(r => r.User)
+                .FirstOrDefaultAsync(r => r.Id == id);
+
+            if (report == null) return NotFound();
+
+            // Kiểm tra quyền
+            bool isAdmin = User.IsInRole("Admin");
+            bool isManager = await _context.ProjectMembers
+                .AnyAsync(pm => pm.ProjectId == report.TaskAssignment.ProjectId && pm.UserId == currentUser.Id && pm.Role == "Manager");
+            bool isOwner = report.UserId == currentUser.Id;
+
+            if (!isAdmin && !isManager && !isOwner)
+            {
+                return Forbid();
+            }
+
+            // Đánh dấu đã đọc nếu là Manager/Admin
+            if ((isManager || isAdmin) && !report.IsRead)
+            {
+                report.IsRead = true;
+                _context.Update(report);
+                await _context.SaveChangesAsync();
+            }
+
+            var model = new ReportDetailsViewModel
+            {
+                Id = report.Id,
+                TaskAssignmentId = report.TaskAssignmentId,
+                TaskName = report.TaskAssignment.TaskName,
+                ProjectId = report.TaskAssignment.ProjectId,
+                ProjectName = report.TaskAssignment.Project.Name,
+                ProjectCode = report.TaskAssignment.Project.ProjectCode,
+                UserId = report.UserId,
+                UserName = report.User.FullName ?? report.User.Email ?? "",
+                UserAvatar = report.User.AvatarPath,
+                UserEmployeeCode = report.User.EmployeeCode ?? "",
+                Title = report.Title,
+                Content = report.Content,
+                CurrentProgress = report.CurrentProgress,
+                AttachmentPath = report.AttachmentPath,
+                IsRead = report.IsRead,
+                CreatedDate = report.CreatedDate,
+                CanDelete = isOwner || isAdmin
+            };
+
+            return View(model);
+        }
+
+        // POST: Task/DeleteReport
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteReport(int reportId)
+        {
+            var currentUser = await _userManager.GetUserAsync(User);
+            if (currentUser == null) return NotFound();
+
+            var report = await _context.TaskReports
+                .Include(r => r.TaskAssignment)
+                .FirstOrDefaultAsync(r => r.Id == reportId);
+
+            if (report == null) return NotFound();
+
+            // Chỉ người gửi hoặc Admin mới được xóa
+            if (report.UserId != currentUser.Id && !User.IsInRole("Admin"))
+            {
+                TempData["ErrorMessage"] = "Bạn không có quyền xóa báo cáo này!";
+                return RedirectToAction("ViewReports", new { taskId = report.TaskAssignmentId });
+            }
+
+            var taskId = report.TaskAssignmentId;
+
+            try
+            {
+                // Xóa file đính kèm
+                if (!string.IsNullOrEmpty(report.AttachmentPath))
+                {
+                    var filePath = Path.Combine(_environment.WebRootPath, report.AttachmentPath.TrimStart('/'));
+                    if (System.IO.File.Exists(filePath))
+                    {
+                        System.IO.File.Delete(filePath);
+                    }
+                }
+
+                _context.TaskReports.Remove(report);
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation($"User {currentUser.Email} đã xóa báo cáo #{reportId}");
+                TempData["SuccessMessage"] = "Đã xóa báo cáo thành công!";
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Lỗi khi xóa báo cáo");
+                TempData["ErrorMessage"] = "Có lỗi xảy ra khi xóa báo cáo!";
+            }
+
+            return RedirectToAction("ViewReports", new { taskId = taskId });
+        }
+
+        // GET: Task/AllReports - Admin xem tất cả báo cáo
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> AllReports()
+        {
+            var reports = await _context.TaskReports
+                .Include(r => r.TaskAssignment).ThenInclude(t => t.Project)
+                .Include(r => r.User)
+                .OrderByDescending(r => r.CreatedDate)
+                .Select(r => new ReportListViewModel
+                {
+                    Id = r.Id,
+                    TaskAssignmentId = r.TaskAssignmentId,
+                    TaskName = r.TaskAssignment.TaskName,
+                    ProjectId = r.TaskAssignment.ProjectId,
+                    ProjectName = r.TaskAssignment.Project.Name,
+                    UserId = r.UserId,
+                    UserName = r.User.FullName ?? r.User.Email ?? "",
+                    UserAvatar = r.User.AvatarPath,
+                    Title = r.Title,
+                    ContentPreview = r.Content.Length > 100 ? r.Content.Substring(0, 100) + "..." : r.Content,
+                    CurrentProgress = r.CurrentProgress,
+                    IsRead = r.IsRead,
+                    HasAttachment = !string.IsNullOrEmpty(r.AttachmentPath),
+                    CreatedDate = r.CreatedDate
+                })
+                .ToListAsync();
+
+            return View(reports);
+        }
     }
 }

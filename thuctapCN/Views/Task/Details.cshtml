@@ -190,10 +190,16 @@
                             <a asp-action="Index" asp-route-projectId="@Model.ProjectId" class="btn btn-secondary">
                                 <i class="bi bi-arrow-left"></i> Quay lại
                             </a>
+                            <a asp-action="ViewReports" asp-route-taskId="@Model.Id" class="btn btn-outline-info ms-2">
+                                <i class="bi bi-file-earmark-text"></i> Xem báo cáo
+                            </a>
                         </div>
                         <div>
                             @if (Model.CanUpdateStatus)
                             {
+                                <a asp-action="CreateReport" asp-route-taskId="@Model.Id" class="btn btn-warning me-2">
+                                    <i class="bi bi-send"></i> Gửi báo cáo
+                                </a>
                                 <a asp-action="UpdateStatus" asp-route-id="@Model.Id" class="btn btn-success me-2">
                                     <i class="bi bi-arrow-repeat"></i> Cập nhật trạng thái
                                 </a>
@@ -268,7 +274,7 @@
                                                     <br />
                                                     <small class="text-muted">
                                                         <i class="bi bi-clock"></i> @comment.CreatedDate.ToString("dd/MM/yyyy HH:mm")
-                                                        @if (comment.UpdatedDate.HasValue)
+                                                        @if (comment.UpdatedDate != null)
                                                         {
                                                             <span class="badge bg-secondary ms-2">Đã chỉnh sửa</span>
                                                         }

@@ -1,0 +1,122 @@
+@{
+    ViewData["Title"] = "Lịch làm việc";
+    var isAdmin = ViewBag.IsAdmin ?? false;
+    var isManager = ViewBag.IsManager ?? false;
+}
+
+<div class="container-fluid mt-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2><i class="bi bi-calendar3"></i> Lịch làm việc</h2>
+            <p class="text-muted mb-0">Xem và quản lý lịch làm việc của bạn</p>
+        </div>
+        <div>
+            <a asp-action="Notifications" class="btn btn-outline-primary me-2">
+                <i class="bi bi-bell"></i> Thông báo
+            </a>
+            @if (isAdmin || isManager)
+            {
+                <a asp-action="Create" class="btn btn-primary">
+                    <i class="bi bi-plus-circle"></i> Thêm lịch mới
+                </a>
+            }
+        </div>
+    </div>
+
+    <!-- Thông báo -->
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle"></i> @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-circle"></i> @TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <!-- Chú thích màu -->
+    <div class="mb-3">
+        <span class="badge me-2" style="background-color: #3788d8;">Công việc</span>
+        <span class="badge me-2" style="background-color: #28a745;">Cuộc họp</span>
+        <span class="badge me-2" style="background-color: #dc3545;">Nghỉ phép</span>
+        <span class="badge me-2" style="background-color: #6c757d;">Khác</span>
+    </div>
+
+    <!-- Calendar -->
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <div id="calendar"></div>
+        </div>
+    </div>
+</div>
+
+@section Styles {
+    <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.css" rel="stylesheet" />
+    <style>
+        #calendar {
+            max-width: 100%;
+            margin: 0 auto;
+        }
+        .fc-event {
+            cursor: pointer;
+        }
+        .fc-toolbar-title {
+            font-size: 1.25rem !important;
+        }
+    </style>
+}
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var calendarEl = document.getElementById('calendar');
+            var calendar = new FullCalendar.Calendar(calendarEl, {
+                initialView: 'dayGridMonth',
+                locale: 'vi',
+                headerToolbar: {
+                    left: 'prev,next today',
+                    center: 'title',
+                    right: 'dayGridMonth,timeGridWeek,timeGridDay,listWeek'
+                },
+                buttonText: {
+                    today: 'Hôm nay',
+                    month: 'Tháng',
+                    week: 'Tuần',
+                    day: 'Ngày',
+                    list: 'Danh sách'
+                },
+                events: {
+                    url: '@Url.Action("GetEvents")',
+                    method: 'GET',
+                    failure: function() {
+                        alert('Không thể tải dữ liệu lịch!');
+                    }
+                },
+                eventClick: function(info) {
+                    if (info.event.url) {
+                        window.location.href = info.event.url;
+                        info.jsEvent.preventDefault();
+                    }
+                },
+                eventDidMount: function(info) {
+                    if (info.event.extendedProps.description) {
+                        info.el.setAttribute('title', info.event.extendedProps.description);
+                    }
+                },
+                height: 'auto',
+                firstDay: 1, // Thứ 2 là ngày đầu tuần
+                navLinks: true,
+                editable: false,
+                dayMaxEvents: true
+            });
+            calendar.render();
+        });
+    </script>
+}

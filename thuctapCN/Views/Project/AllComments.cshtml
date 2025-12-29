@@ -1,0 +1,134 @@
+@model IEnumerable<thuctapCN.Models.ProjectCommentViewModel>
+
+@{
+    ViewData["Title"] = "Tất cả bình luận";
+}
+
+<div class="container mt-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1">
+                <i class="fas fa-comments text-primary me-2"></i>Tất cả bình luận
+            </h2>
+            <p class="text-muted mb-0">Xem tất cả bình luận trong các dự án</p>
+        </div>
+        <a asp-action="Index" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left me-1"></i>Quay lại
+        </a>
+    </div>
+
+    <!-- Thông báo -->
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="fas fa-check-circle me-2"></i>@TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-circle me-2"></i>@TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <!-- Danh sách bình luận -->
+    <div class="card shadow-sm">
+        <div class="card-header bg-white">
+            <h5 class="mb-0">
+                <i class="fas fa-list me-2"></i>Danh sách bình luận 
+                <span class="badge bg-secondary">@Model.Count()</span>
+            </h5>
+        </div>
+        <div class="card-body p-0">
+            @if (!Model.Any())
+            {
+                <div class="text-center py-5">
+                    <i class="fas fa-comment-slash fa-3x text-muted mb-3"></i>
+                    <p class="text-muted">Chưa có bình luận nào</p>
+                </div>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th style="width: 15%;">Dự án</th>
+                                <th style="width: 15%;">Người viết</th>
+                                <th style="width: 40%;">Nội dung</th>
+                                <th style="width: 15%;">Thời gian</th>
+                                <th style="width: 15%;">Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var comment in Model)
+                            {
+                                <tr>
+                                    <td>
+                                        <a asp-action="Comments" asp-route-id="@comment.ProjectId" 
+                                           class="text-decoration-none">
+                                            <strong>@comment.ProjectName</strong>
+                                        </a>
+                                    </td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            @if (!string.IsNullOrEmpty(comment.UserAvatar))
+                                            {
+                                                <img src="@comment.UserAvatar" alt="Avatar" 
+                                                     class="rounded-circle me-2" style="width: 30px; height: 30px; object-fit: cover;">
+                                            }
+                                            else
+                                            {
+                                                <div class="rounded-circle bg-primary d-flex align-items-center justify-content-center me-2" 
+                                                     style="width: 30px; height: 30px;">
+                                                    <span class="text-white small">@comment.UserName.Substring(0, 1).ToUpper()</span>
+                                                </div>
+                                            }
+                                            <span>@comment.UserName</span>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div style="max-width: 400px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                                            @comment.Content
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <small class="text-muted">
+                                            @comment.CreatedDate.ToString("dd/MM/yyyy HH:mm")
+                                        </small>
+                                        @if (comment.UpdatedDate.HasValue)
+                                        {
+                                            <br/><small class="text-muted">(đã sửa)</small>
+                                        }
+                                    </td>
+                                    <td>
+                                        <div class="btn-group">
+                                            <a asp-action="Comments" asp-route-id="@comment.ProjectId" 
+                                               class="btn btn-sm btn-outline-primary" title="Xem">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            @if (comment.CanDelete)
+                                            {
+                                                <form asp-action="DeleteComment" method="post" class="d-inline"
+                                                      onsubmit="return confirm('Bạn có chắc muốn xóa bình luận này?');">
+                                                    @Html.AntiForgeryToken()
+                                                    <input type="hidden" name="commentId" value="@comment.Id" />
+                                                    <button type="submit" class="btn btn-sm btn-outline-danger" title="Xóa">
+                                                        <i class="fas fa-trash"></i>
+                                                    </button>
+                                                </form>
+                                            }
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+    </div>
+</div>
