@@ -671,7 +671,7 @@ namespace thuctapCN.Controllers
         // POST: Project/DeleteComment - Xóa bình luận
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteComment(int commentId)
+        public async Task<IActionResult> DeleteComment(int commentId, bool fromAllComments = false)
         {
             var currentUser = await _userManager.GetUserAsync(User);
             if (currentUser == null) return NotFound();
@@ -691,6 +691,8 @@ namespace thuctapCN.Controllers
             if (!isOwner && !isManager && !isAdmin)
             {
                 TempData["ErrorMessage"] = "Bạn không có quyền xóa bình luận này!";
+                if (fromAllComments)
+                    return RedirectToAction("AllComments");
                 return RedirectToAction("Comments", new { id = comment.ProjectId });
             }
 
@@ -710,6 +712,8 @@ namespace thuctapCN.Controllers
                 TempData["ErrorMessage"] = "Có lỗi xảy ra, vui lòng thử lại!";
             }
 
+            if (fromAllComments)
+                return RedirectToAction("AllComments");
             return RedirectToAction("Comments", new { id = projectId });
         }
 
