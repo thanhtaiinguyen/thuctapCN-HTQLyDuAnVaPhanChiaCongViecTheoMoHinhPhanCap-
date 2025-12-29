@@ -1,0 +1,116 @@
+@model thuctapCN.Models.CreateNotificationViewModel
+
+@{
+    ViewData["Title"] = "Gửi thông báo";
+}
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="bi bi-send"></i> Gửi thông báo
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <form asp-action="CreateNotification" method="post">
+                        @Html.AntiForgeryToken()
+
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+
+                        <div class="mb-3">
+                            <div class="form-check form-switch mb-2">
+                                <input asp-for="SendToAll" class="form-check-input" type="checkbox" 
+                                       onchange="toggleUserSelect(this.checked)" />
+                                <label asp-for="SendToAll" class="form-check-label fw-bold">
+                                    Gửi cho tất cả người dùng
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="mb-3" id="userSelectDiv">
+                            <label asp-for="UserId" class="form-label fw-bold">
+                                <i class="bi bi-person"></i> Người nhận <span class="text-danger">*</span>
+                            </label>
+                            <select asp-for="UserId" class="form-select" id="userSelect">
+                                <option value="">-- Chọn người nhận --</option>
+                                @foreach (var user in Model.AvailableUsers)
+                                {
+                                    <option value="@user.Id">@user.FullName (@user.Email)</option>
+                                }
+                            </select>
+                            <span asp-validation-for="UserId" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Type" class="form-label fw-bold">
+                                <i class="bi bi-tag"></i> Loại thông báo
+                            </label>
+                            <select asp-for="Type" class="form-select">
+                                <option value="Info">Thông tin</option>
+                                <option value="Success">Thành công</option>
+                                <option value="Warning">Cảnh báo</option>
+                                <option value="Danger">Quan trọng</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Title" class="form-label fw-bold">
+                                <i class="bi bi-bookmark"></i> Tiêu đề <span class="text-danger">*</span>
+                            </label>
+                            <input asp-for="Title" class="form-control" placeholder="Nhập tiêu đề thông báo..." />
+                            <span asp-validation-for="Title" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Content" class="form-label fw-bold">
+                                <i class="bi bi-card-text"></i> Nội dung <span class="text-danger">*</span>
+                            </label>
+                            <textarea asp-for="Content" class="form-control" rows="5" 
+                                      placeholder="Nhập nội dung thông báo..."></textarea>
+                            <div class="form-text">Tối đa 2000 ký tự</div>
+                            <span asp-validation-for="Content" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="RelatedUrl" class="form-label fw-bold">
+                                <i class="bi bi-link-45deg"></i> Đường dẫn liên quan (tùy chọn)
+                            </label>
+                            <input asp-for="RelatedUrl" class="form-control" placeholder="/Project/Details/1" />
+                            <div class="form-text">Đường dẫn trang liên quan để người dùng có thể truy cập</div>
+                        </div>
+
+                        <hr />
+
+                        <div class="d-flex justify-content-between">
+                            <a asp-action="Notifications" class="btn btn-secondary">
+                                <i class="bi bi-arrow-left"></i> Quay lại
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-send"></i> Gửi thông báo
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    <script>
+        function toggleUserSelect(sendToAll) {
+            var userSelectDiv = document.getElementById('userSelectDiv');
+            var userSelect = document.getElementById('userSelect');
+            if (sendToAll) {
+                userSelectDiv.style.display = 'none';
+                userSelect.removeAttribute('required');
+            } else {
+                userSelectDiv.style.display = 'block';
+                userSelect.setAttribute('required', 'required');
+            }
+        }
+    </script>
+}

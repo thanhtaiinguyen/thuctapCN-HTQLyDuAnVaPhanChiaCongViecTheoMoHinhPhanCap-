@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using thuctapCN.Data;
 using thuctapCN.Models;
 
 namespace thuctapCN.Controllers
@@ -11,11 +12,16 @@ namespace thuctapCN.Controllers
     {
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly RoleManager<IdentityRole> _roleManager;
+        private readonly thuctapCNContext _context;
 
-        public AdminController(UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager)
+        public AdminController(
+            UserManager<ApplicationUser> userManager, 
+            RoleManager<IdentityRole> roleManager,
+            thuctapCNContext context)
         {
             _userManager = userManager;
             _roleManager = roleManager;
+            _context = context;
         }
         public async Task<IActionResult> Users()
         {
@@ -252,14 +258,47 @@ namespace thuctapCN.Controllers
                 return RedirectToAction(nameof(Users));
             }
 
-            var result = await _userManager.DeleteAsync(user);
-            if (result.Succeeded)
+            try
             {
-                TempData["SuccessMessage"] = $"Đã xóa user {user.Email} thành công!";
+                // Kiểm tra user có công việc được giao không
+                var soCongViec = await _context.TaskAssignments.CountAsync(t => t.AssignedToUserId == id);
+                
+                if (soCongViec > 0)
+                {
+                    TempData["ErrorMessage"] = $"Không thể xóa user này vì đang có {soCongViec} công việc được giao. Vui lòng xóa hoặc chuyển công việc trước!";
+                    return RedirectToAction(nameof(Users));
+                }
+
+                // Xóa các bình luận của user
+                var binhLuan = await _context.TaskComments.Where(c => c.UserId == id).ToListAsync();
+                if (binhLuan.Any())
+                {
+                    _context.TaskComments.RemoveRange(binhLuan);
+                }
+
+                // Xóa user khỏi các dự án
+                var thanhVienDuAn = await _context.ProjectMembers.Where(pm => pm.UserId == id).ToListAsync();
+                if (thanhVienDuAn.Any())
+                {
+                    _context.ProjectMembers.RemoveRange(thanhVienDuAn);
+                }
+
+                await _context.SaveChangesAsync();
+
+                // Xóa user
+                var result = await _userManager.DeleteAsync(user);
+                if (result.Succeeded)
+                {
+                    TempData["SuccessMessage"] = $"Đã xóa user {user.Email} thành công!";
+                }
+                else
+                {
+                    TempData["ErrorMessage"] = "Có lỗi xảy ra khi xóa user!";
+                }
             }
-            else
+            catch (Exception ex)
             {
-                TempData["ErrorMessage"] = "Có lỗi xảy ra khi xóa user!";
+                TempData["ErrorMessage"] = $"Lỗi: {ex.Message}";
             }
 
             return RedirectToAction(nameof(Users));

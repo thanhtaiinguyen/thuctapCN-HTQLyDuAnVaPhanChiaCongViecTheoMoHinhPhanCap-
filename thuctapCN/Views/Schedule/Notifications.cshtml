@@ -1,0 +1,143 @@
+@model IEnumerable<thuctapCN.Models.NotificationViewModel>
+
+@{
+    ViewData["Title"] = "Thông báo";
+    var unreadCount = Model.Count(n => !n.IsRead);
+}
+
+<div class="container mt-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2>
+                <i class="bi bi-bell"></i> Thông báo
+                @if (unreadCount > 0)
+                {
+                    <span class="badge bg-danger">@unreadCount mới</span>
+                }
+            </h2>
+            <p class="text-muted mb-0">Xem tất cả thông báo của bạn</p>
+        </div>
+        <div>
+            <a asp-action="Index" class="btn btn-outline-secondary me-2">
+                <i class="bi bi-calendar3"></i> Lịch làm việc
+            </a>
+            @if (User.IsInRole("Admin"))
+            {
+                <a asp-action="CreateNotification" class="btn btn-primary me-2">
+                    <i class="bi bi-send"></i> Gửi thông báo
+                </a>
+            }
+            @if (unreadCount > 0)
+            {
+                <form asp-action="MarkAllNotificationsAsRead" method="post" class="d-inline">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn btn-outline-primary">
+                        <i class="bi bi-check-all"></i> Đánh dấu tất cả đã đọc
+                    </button>
+                </form>
+            }
+        </div>
+    </div>
+
+    <!-- Thông báo -->
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle"></i> @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <!-- Danh sách thông báo -->
+    @if (!Model.Any())
+    {
+        <div class="text-center py-5">
+            <i class="bi bi-bell-slash" style="font-size: 4rem; color: #ccc;"></i>
+            <p class="text-muted mt-3">Không có thông báo nào.</p>
+        </div>
+    }
+    else
+    {
+        <div class="list-group">
+            @foreach (var notification in Model)
+            {
+                var bgClass = notification.IsRead ? "" : "list-group-item-light";
+                var iconClass = notification.Type switch
+                {
+                    "Success" => "bi-check-circle-fill text-success",
+                    "Warning" => "bi-exclamation-triangle-fill text-warning",
+                    "Danger" => "bi-x-circle-fill text-danger",
+                    _ => "bi-info-circle-fill text-primary"
+                };
+                
+                <div class="list-group-item @bgClass">
+                    <div class="d-flex w-100 justify-content-between align-items-start">
+                        <div class="d-flex">
+                            <div class="me-3 pt-1">
+                                <i class="bi @iconClass fs-4"></i>
+                            </div>
+                            <div>
+                                <h5 class="mb-1">
+                                    @if (!notification.IsRead)
+                                    {
+                                        <span class="badge bg-primary me-1">Mới</span>
+                                    }
+                                    @notification.Title
+                                </h5>
+                                <p class="mb-1">@notification.Content</p>
+                                <small class="text-muted">
+                                    <i class="bi bi-clock"></i> @notification.TimeAgo
+                                </small>
+                                @if (!string.IsNullOrEmpty(notification.RelatedUrl))
+                                {
+                                    <a href="@notification.RelatedUrl" class="ms-3 small">
+                                        <i class="bi bi-box-arrow-up-right"></i> Xem chi tiết
+                                    </a>
+                                }
+                            </div>
+                        </div>
+                        <div class="btn-group">
+                            @if (!notification.IsRead)
+                            {
+                                <button type="button" class="btn btn-sm btn-outline-primary" 
+                                        onclick="markAsRead(@notification.Id)" title="Đánh dấu đã đọc">
+                                    <i class="bi bi-check"></i>
+                                </button>
+                            }
+                            <form asp-action="DeleteNotification" method="post" class="d-inline"
+                                  onsubmit="return confirm('Xóa thông báo này?');">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="id" value="@notification.Id" />
+                                <button type="submit" class="btn btn-sm btn-outline-danger" title="Xóa">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <script>
+        function markAsRead(id) {
+            fetch('@Url.Action("MarkNotificationAsRead")', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value || ''
+                },
+                body: 'id=' + id
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                }
+            });
+        }
+    </script>
+}

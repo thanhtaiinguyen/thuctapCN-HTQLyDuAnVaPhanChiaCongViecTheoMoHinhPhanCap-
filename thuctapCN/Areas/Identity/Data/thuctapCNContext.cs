@@ -14,8 +14,12 @@ public class thuctapCNContext : IdentityDbContext<ApplicationUser, IdentityRole,
 
     public DbSet<Project> Projects { get; set; }
     public DbSet<ProjectMember> ProjectMembers { get; set; }
+    public DbSet<ProjectComment> ProjectComments { get; set; }
     public DbSet<TaskAssignment> TaskAssignments { get; set; }
     public DbSet<TaskComment> TaskComments { get; set; }
+    public DbSet<TaskReport> TaskReports { get; set; }
+    public DbSet<Notification> Notifications { get; set; }
+    public DbSet<WorkSchedule> WorkSchedules { get; set; }
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -114,6 +118,103 @@ public class thuctapCNContext : IdentityDbContext<ApplicationUser, IdentityRole,
 
             entity.HasIndex(c => c.CreatedDate)
                   .HasDatabaseName("IX_TaskComment_CreatedDate");
+        });
+
+        // Cấu hình mối quan hệ Bình luận dự án
+        builder.Entity<ProjectComment>(entity =>
+        {
+            entity.HasOne(c => c.Project)
+                  .WithMany()
+                  .HasForeignKey(c => c.ProjectId)
+                  .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(c => c.User)
+                  .WithMany()
+                  .HasForeignKey(c => c.UserId)
+                  .OnDelete(DeleteBehavior.Restrict);
+
+            // Chỉ mục để tăng hiệu suất truy vấn
+            entity.HasIndex(c => c.ProjectId)
+                  .HasDatabaseName("IX_ProjectComment_ProjectId");
+
+            entity.HasIndex(c => c.UserId)
+                  .HasDatabaseName("IX_ProjectComment_UserId");
+
+            entity.HasIndex(c => c.CreatedDate)
+                  .HasDatabaseName("IX_ProjectComment_CreatedDate");
+        });
+
+        // Cấu hình mối quan hệ Báo cáo công việc
+        builder.Entity<TaskReport>(entity =>
+        {
+            entity.HasOne(r => r.TaskAssignment)
+                  .WithMany()
+                  .HasForeignKey(r => r.TaskAssignmentId)
+                  .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(r => r.User)
+                  .WithMany()
+                  .HasForeignKey(r => r.UserId)
+                  .OnDelete(DeleteBehavior.Restrict);
+
+            // Chỉ mục để tăng hiệu suất truy vấn
+            entity.HasIndex(r => r.TaskAssignmentId)
+                  .HasDatabaseName("IX_TaskReport_TaskAssignmentId");
+
+            entity.HasIndex(r => r.UserId)
+                  .HasDatabaseName("IX_TaskReport_UserId");
+
+            entity.HasIndex(r => r.CreatedDate)
+                  .HasDatabaseName("IX_TaskReport_CreatedDate");
+
+            entity.HasIndex(r => r.IsRead)
+                  .HasDatabaseName("IX_TaskReport_IsRead");
+        });
+
+        // Cấu hình Notification
+        builder.Entity<Notification>(entity =>
+        {
+            entity.HasOne(n => n.User)
+                  .WithMany()
+                  .HasForeignKey(n => n.UserId)
+                  .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(n => n.UserId)
+                  .HasDatabaseName("IX_Notification_UserId");
+
+            entity.HasIndex(n => n.IsRead)
+                  .HasDatabaseName("IX_Notification_IsRead");
+
+            entity.HasIndex(n => n.CreatedDate)
+                  .HasDatabaseName("IX_Notification_CreatedDate");
+        });
+
+        // Cấu hình WorkSchedule
+        builder.Entity<WorkSchedule>(entity =>
+        {
+            entity.HasOne(s => s.User)
+                  .WithMany()
+                  .HasForeignKey(s => s.UserId)
+                  .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(s => s.CreatedByUser)
+                  .WithMany()
+                  .HasForeignKey(s => s.CreatedByUserId)
+                  .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(s => s.Project)
+                  .WithMany()
+                  .HasForeignKey(s => s.ProjectId)
+                  .OnDelete(DeleteBehavior.SetNull);
+
+            entity.HasIndex(s => s.UserId)
+                  .HasDatabaseName("IX_WorkSchedule_UserId");
+
+            entity.HasIndex(s => s.StartDate)
+                  .HasDatabaseName("IX_WorkSchedule_StartDate");
+
+            entity.HasIndex(s => s.EndDate)
+                  .HasDatabaseName("IX_WorkSchedule_EndDate");
         });
     }
 }

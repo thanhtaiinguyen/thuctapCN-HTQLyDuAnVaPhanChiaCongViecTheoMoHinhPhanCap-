@@ -1,0 +1,136 @@
+@model thuctapCN.Models.CreateScheduleViewModel
+
+@{
+    ViewData["Title"] = "Chỉnh sửa lịch làm việc";
+}
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="bi bi-calendar-plus"></i> Chỉnh sửa lịch làm việc
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <form asp-action="Edit" method="post">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" asp-for="Id" />
+
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="UserId" class="form-label fw-bold">
+                                    <i class="bi bi-person"></i> Nhân viên <span class="text-danger">*</span>
+                                </label>
+                                <select asp-for="UserId" class="form-select" required>
+                                    <option value="">-- Chọn nhân viên --</option>
+                                    @foreach (var user in Model.AvailableUsers)
+                                    {
+                                        <option value="@user.Id">@user.FullName (@user.Email)</option>
+                                    }
+                                </select>
+                                <span asp-validation-for="UserId" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="ProjectId" class="form-label fw-bold">
+                                    <i class="bi bi-folder"></i> Dự án liên quan
+                                </label>
+                                <select asp-for="ProjectId" class="form-select">
+                                    <option value="">-- Không chọn --</option>
+                                    @foreach (var project in Model.AvailableProjects)
+                                    {
+                                        <option value="@project.Id">@project.ProjectCode - @project.Name</option>
+                                    }
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Title" class="form-label fw-bold">
+                                <i class="bi bi-bookmark"></i> Tiêu đề <span class="text-danger">*</span>
+                            </label>
+                            <input asp-for="Title" class="form-control" />
+                            <span asp-validation-for="Title" class="text-danger"></span>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="ScheduleType" class="form-label fw-bold">
+                                    <i class="bi bi-tag"></i> Loại lịch
+                                </label>
+                                <select asp-for="ScheduleType" class="form-select">
+                                    <option value="Work">Công việc</option>
+                                    <option value="Meeting">Cuộc họp</option>
+                                    <option value="Holiday">Nghỉ phép</option>
+                                    <option value="Other">Khác</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="Color" class="form-label fw-bold">
+                                    <i class="bi bi-palette"></i> Màu sắc
+                                </label>
+                                <input asp-for="Color" type="color" class="form-control form-control-color" style="width: 100%;" />
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="StartDate" class="form-label fw-bold">
+                                    <i class="bi bi-calendar-event"></i> Ngày bắt đầu <span class="text-danger">*</span>
+                                </label>
+                                <input asp-for="StartDate" type="datetime-local" class="form-control" />
+                                <span asp-validation-for="StartDate" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="EndDate" class="form-label fw-bold">
+                                    <i class="bi bi-calendar-event"></i> Ngày kết thúc <span class="text-danger">*</span>
+                                </label>
+                                <input asp-for="EndDate" type="datetime-local" class="form-control" />
+                                <span asp-validation-for="EndDate" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input asp-for="IsAllDay" class="form-check-input" type="checkbox" />
+                                <label asp-for="IsAllDay" class="form-check-label">Cả ngày</label>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Location" class="form-label fw-bold">
+                                <i class="bi bi-geo-alt"></i> Địa điểm
+                            </label>
+                            <input asp-for="Location" class="form-control" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Description" class="form-label fw-bold">
+                                <i class="bi bi-card-text"></i> Mô tả
+                            </label>
+                            <textarea asp-for="Description" class="form-control" rows="3"></textarea>
+                        </div>
+
+                        <hr />
+
+                        <div class="d-flex justify-content-between">
+                            <a asp-action="Index" class="btn btn-secondary">
+                                <i class="bi bi-arrow-left"></i> Quay lại
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-save"></i> Cập nhật
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

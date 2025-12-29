@@ -1,0 +1,166 @@
+@model IEnumerable<thuctapCN.Models.ReportListViewModel>
+
+@{
+    ViewData["Title"] = "Tất cả báo cáo";
+}
+
+<div class="container-fluid mt-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2><i class="bi bi-file-earmark-text"></i> Tất cả báo cáo</h2>
+            <p class="text-muted mb-0">Xem tất cả báo cáo công việc trong hệ thống</p>
+        </div>
+        <a asp-action="MyTasks" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Công việc của tôi
+        </a>
+    </div>
+
+    <!-- Thông báo -->
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle"></i> @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-circle"></i> @TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <!-- Thống kê -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card text-white bg-primary">
+                <div class="card-body py-3">
+                    <h5 class="card-title"><i class="bi bi-file-text"></i> Tổng báo cáo</h5>
+                    <h2 class="mb-0">@Model.Count()</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-warning">
+                <div class="card-body py-3">
+                    <h5 class="card-title"><i class="bi bi-envelope"></i> Chưa đọc</h5>
+                    <h2 class="mb-0">@Model.Count(r => !r.IsRead)</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-success">
+                <div class="card-body py-3">
+                    <h5 class="card-title"><i class="bi bi-envelope-open"></i> Đã đọc</h5>
+                    <h2 class="mb-0">@Model.Count(r => r.IsRead)</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-info">
+                <div class="card-body py-3">
+                    <h5 class="card-title"><i class="bi bi-folder"></i> Số dự án</h5>
+                    <h2 class="mb-0">@Model.Select(r => r.ProjectId).Distinct().Count()</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Danh sách báo cáo -->
+    @if (!Model.Any())
+    {
+        <div class="text-center py-5">
+            <i class="bi bi-inbox" style="font-size: 4rem; color: #ccc;"></i>
+            <p class="text-muted mt-3">Chưa có báo cáo nào trong hệ thống.</p>
+        </div>
+    }
+    else
+    {
+        <div class="card">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Người gửi</th>
+                                <th>Tiêu đề</th>
+                                <th>Công việc / Dự án</th>
+                                <th>Tiến độ</th>
+                                <th>Ngày gửi</th>
+                                <th>Trạng thái</th>
+                                <th class="text-center">Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var report in Model)
+                            {
+                                <tr class="@(!report.IsRead ? "table-warning" : "")">
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            @if (!string.IsNullOrEmpty(report.UserAvatar))
+                                            {
+                                                <img src="@report.UserAvatar" alt="Avatar" 
+                                                     class="rounded-circle me-2" style="width: 35px; height: 35px; object-fit: cover;">
+                                            }
+                                            else
+                                            {
+                                                <div class="rounded-circle bg-primary d-flex align-items-center justify-content-center me-2" 
+                                                     style="width: 35px; height: 35px;">
+                                                    <span class="text-white small">@report.UserName.Substring(0, 1).ToUpper()</span>
+                                                </div>
+                                            }
+                                            <span>@report.UserName</span>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <strong>@report.Title</strong>
+                                        @if (report.HasAttachment)
+                                        {
+                                            <i class="bi bi-paperclip text-muted ms-1"></i>
+                                        }
+                                    </td>
+                                    <td>
+                                        <small>@report.TaskName</small>
+                                        <br />
+                                        <small class="text-muted">@report.ProjectName</small>
+                                    </td>
+                                    <td>
+                                        <div class="progress" style="height: 20px; width: 80px;">
+                                            <div class="progress-bar @(report.CurrentProgress >= 100 ? "bg-success" : "bg-info")" 
+                                                 style="width: @report.CurrentProgress%">
+                                                @report.CurrentProgress%
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <small>@report.CreatedDate.ToString("dd/MM/yyyy")</small>
+                                        <br />
+                                        <small class="text-muted">@report.CreatedDate.ToString("HH:mm")</small>
+                                    </td>
+                                    <td>
+                                        @if (report.IsRead)
+                                        {
+                                            <span class="badge bg-success">Đã đọc</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-warning text-dark">Mới</span>
+                                        }
+                                    </td>
+                                    <td class="text-center">
+                                        <a asp-action="ReportDetails" asp-route-id="@report.Id" 
+                                           class="btn btn-sm btn-outline-primary" title="Xem chi tiết">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    }
+</div>
